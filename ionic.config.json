@@ -1,0 +1,7 @@
+{
+  "name": "wosweat",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}

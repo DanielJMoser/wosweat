@@ -13,41 +13,45 @@ export class EventService {
      * Get events from the API or cache
      */
     static async getEvents(forceRefresh = false): Promise<EventData[]> {
+        console.log(`[EventService] getEvents called with forceRefresh=${forceRefresh}`);
         // Check cache first if not forcing a refresh
         if (!forceRefresh) {
             const cachedEvents = this.getFromCache();
             if (cachedEvents) {
-                console.log('Using cached events');
+                console.log('[EventService] Using cached events');
                 return cachedEvents;
             }
         }
 
         // If not in cache or expired, fetch from API
         try {
+            console.log('[EventService] Fetching events from API');
             const response = await fetch('/.netlify/functions/get-events');
             if (!response.ok) {
                 throw new Error(`Failed to fetch events: ${response.statusText}`);
             }
 
             const data = await response.json();
+            console.log('[EventService] API response:', data);
 
             if (!data.success) {
                 throw new Error(data.error || 'Failed to fetch events');
             }
 
             const events: EventData[] = data.events;
+            console.log(`[EventService] Retrieved ${events.length} events from API`);
 
             // Save to cache
             this.saveToCache(events);
 
             return events;
         } catch (error) {
-            console.error('Error fetching events:', error);
+            console.error('[EventService] Error fetching events:', error);
 
             // If we have expired cache, use it as fallback
             const expiredCache = this.getFromCache(true);
             if (expiredCache) {
-                console.log('Using expired cache as fallback');
+                console.log('[EventService] Using expired cache as fallback');
                 return expiredCache;
             }
 
@@ -59,28 +63,31 @@ export class EventService {
      * Trigger a manual update of the events data
      */
     static async triggerUpdate(url?: string): Promise<boolean> {
+        console.log('[EventService] triggerUpdate called');
         try {
             const endpoint = url
                 ? `/.netlify/functions/trigger-scrape?url=${encodeURIComponent(url)}`
                 : '/.netlify/functions/trigger-scrape';
 
+            console.log(`[EventService] Calling endpoint: ${endpoint}`);
             const response = await fetch(endpoint);
             if (!response.ok) {
                 throw new Error(`Failed to trigger update: ${response.statusText}`);
             }
 
             const data = await response.json();
+            console.log('[EventService] Trigger response:', data);
 
             if (!data.success) {
                 throw new Error(data.error || 'Failed to trigger update');
             }
 
-            // If successful, refresh the cache
-            await this.getEvents(true);
+            // REMOVED: Do not fetch events here to avoid double fetch
+            // Let the caller handle refreshing the data
 
             return true;
         } catch (error) {
-            console.error('Error triggering update:', error);
+            console.error('[EventService] Error triggering update:', error);
             return false;
         }
     }

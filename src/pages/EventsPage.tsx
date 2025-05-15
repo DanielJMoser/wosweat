@@ -1,16 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     IonContent,
     IonHeader,
     IonPage,
     IonTitle,
     IonToolbar,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonSpinner,
-    IonRefresher,
-    IonRefresherContent,
     IonButton,
     IonToast,
     IonSkeletonText,
@@ -20,17 +14,16 @@ import {
     IonCardSubtitle,
     IonCardContent,
     IonFooter,
-    IonBadge,
+    IonRefresher,
+    IonRefresherContent,
     IonSearchbar,
-    IonSelect,
-    IonSelectOption,
-    RefresherEventDetail,
     IonLoading,
     IonIcon,
-    IonFab,
-    IonFabButton
+    RefresherEventDetail,
+    IonChip,
+    IonLabel
 } from '@ionic/react';
-import { refresh, calendar, time, locate, link } from 'ionicons/icons';
+import { refresh, calendar, locate, link } from 'ionicons/icons';
 import { useEvents } from '../context/EventsContext';
 import './EventsPage.css';
 
@@ -58,14 +51,22 @@ const EventsPage: React.FC = () => {
     const [toastMessage, setToastMessage] = useState<string>('');
     const [searchText, setSearchText] = useState<string>('');
     const [showLoading, setShowLoading] = useState<boolean>(false);
+    const [debugInfo, setDebugInfo] = useState<string>('');
+
+    // Update debug info when state changes
+    useEffect(() => {
+        setDebugInfo(`Events: ${state.events.length}, Loading: ${state.loading}, Error: ${state.error || 'none'}`);
+    }, [state]);
 
     // Handle refresh (pull-to-refresh)
     const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
         try {
+            console.log('Pull-to-refresh triggered');
             await fetchEvents(true); // Force refresh from API
             setToastMessage('Events refreshed successfully');
             setShowToast(true);
         } catch (error) {
+            console.error('Error during refresh:', error);
             setToastMessage('Failed to refresh events');
             setShowToast(true);
         } finally {
@@ -75,12 +76,14 @@ const EventsPage: React.FC = () => {
 
     // Handle manual update
     const handleManualUpdate = async () => {
+        console.log('Update Now button clicked');
         setShowLoading(true);
         try {
             await triggerUpdate();
             setToastMessage('Events updated successfully');
             setShowToast(true);
         } catch (error) {
+            console.error('Error during manual update:', error);
             setToastMessage('Failed to update events');
             setShowToast(true);
         } finally {
@@ -108,6 +111,8 @@ const EventsPage: React.FC = () => {
         return dateA - dateB; // Ascending order (upcoming events first)
     });
 
+    console.log(`Rendering EventsPage with ${state.events.length} events, ${sortedEvents.length} after filtering`);
+
     return (
         <IonPage>
             <IonHeader>
@@ -125,6 +130,11 @@ const EventsPage: React.FC = () => {
             </IonHeader>
 
             <IonContent>
+                {/* Debug Info */}
+                <IonChip color="tertiary" onClick={() => console.log('Full state:', state)}>
+                    <IonLabel>{debugInfo}</IonLabel>
+                </IonChip>
+
                 {/* Pull-to-refresh */}
                 <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
                     <IonRefresherContent></IonRefresherContent>
@@ -159,26 +169,22 @@ const EventsPage: React.FC = () => {
                 )}
 
                 {/* No events found */}
-                {!state.loading && sortedEvents.length === 0 && !state.error && (
+                {!state.loading && sortedEvents.length === 0 && (
                     <div className="ion-text-center ion-padding">
                         <h3>No events found</h3>
                         {searchText ? (
                             <p>Try adjusting your search criteria</p>
+                        ) : state.error ? (
+                            <>
+                                <p>Error: {state.error}</p>
+                                <IonButton onClick={() => fetchEvents(true)}>Try Again</IonButton>
+                            </>
                         ) : (
                             <>
                                 <p>No upcoming events in the database</p>
                                 <IonButton onClick={() => fetchEvents(true)}>Try Again</IonButton>
                             </>
                         )}
-                    </div>
-                )}
-
-                {/* Error state */}
-                {!state.loading && state.error && (
-                    <div className="ion-text-center ion-padding">
-                        <h3>Error loading events</h3>
-                        <p>{state.error}</p>
-                        <IonButton onClick={() => fetchEvents(true)}>Try Again</IonButton>
                     </div>
                 )}
 
@@ -197,8 +203,8 @@ const EventsPage: React.FC = () => {
                                         <IonIcon icon={calendar} /> {formatDate(event.date)}
                                         {event.venue && (
                                             <span>
-                        <IonIcon icon={locate} /> {event.venue}
-                      </span>
+                                                <IonIcon icon={locate} /> {event.venue}
+                                            </span>
                                         )}
                                     </IonCardSubtitle>
                                     <IonCardTitle>{event.title}</IonCardTitle>

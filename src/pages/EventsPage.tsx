@@ -119,7 +119,7 @@ const EventsPage: React.FC = () => {
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle>Event Listings</IonTitle>
+                    <IonTitle>wosWeat (alpha 1.0.0)</IonTitle>
                     <IonButton
                         slot="end"
                         onClick={handleManualUpdate}

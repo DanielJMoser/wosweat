@@ -278,5 +278,6 @@ export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     );
 };
 
+
 // Custom hook for using the events context
 export const useEvents = () => useContext(EventsContext);

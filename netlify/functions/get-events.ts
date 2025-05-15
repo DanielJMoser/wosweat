@@ -65,7 +65,11 @@ export const handler: Handler = async (event) => {
                         timestamp: new Date().toISOString()
                     })
                 };
+            } else {
+                console.log('No cached events found');
             }
+        } else {
+            console.log('Force refresh requested, skipping cache');
         }
 
         console.log('Fetching fresh events data');

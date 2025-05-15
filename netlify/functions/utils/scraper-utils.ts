@@ -91,10 +91,10 @@ export async function getStoredEvents(): Promise<EventData[]> {
 function getSelectorsForSite(url: string) {
     if (url.includes('treibhaus.at')) {
         return {
-            eventContainer: '.program-entry, .program-event, .event-container',
-            title: 'h1, h2, h3, .title',
-            date: '.date, .event-date, time',
-            description: '.description, .text, p',
+            eventContainer: '.program-entry, .program-event, .event-item, div.item, article, .event, .col-md-4',
+            title: 'h1, h2, h3, h4, .title, .header, span.title, strong',
+            date: '.date, .event-date, time, .datum, .date-display-single',
+            description: '.description, .text, .content, p',
             url: 'a',
             image: 'img',
             venue: 'Treibhaus Innsbruck'
@@ -147,6 +147,17 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
         const containerCount = $(selectors.eventContainer).length;
         console.log(`Found ${containerCount} potential event containers`);
 
+        // Analyze the DOM structure if no containers found
+        if (containerCount === 0) {
+            console.log("DOM Analysis for debugging:");
+            // Log some common container patterns
+            console.log(`- Elements with 'event' in class: ${$('[class*="event"]').length}`);
+            console.log(`- Articles: ${$('article').length}`);
+            console.log(`- List items: ${$('li').length}`);
+            console.log(`- Divs with 'item' class: ${$('.item').length}`);
+            console.log(`- Divs with grid classes: ${$('.col-md-4, .col-sm-6, .col-lg-3').length}`);
+        }
+
         // Example selectors for treibhaus.at - adjust based on the target website's structure
         $(selectors.eventContainer).each((index, element) => {
             try {
@@ -166,6 +177,13 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
                 const germanDateMatch = dateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
                 if (germanDateMatch) {
                     const [_, day, month, year = new Date().getFullYear()] = germanDateMatch;
+                    date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
+
+                // Try abbreviated day format: Do. DD.MM.YYYY
+                const abbrevDayMatch = dateText.match(/([A-Za-zäöüÄÖÜ]{2})\.\s*(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
+                if (abbrevDayMatch) {
+                    const [_, _day, day, month, year = new Date().getFullYear()] = abbrevDayMatch;
                     date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
                 }
 

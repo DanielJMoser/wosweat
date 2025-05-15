@@ -15,9 +15,6 @@ export class EventService {
     static async getEvents(forceRefresh = false): Promise<EventData[]> {
         console.log(`EventService.getEvents(forceRefresh: ${forceRefresh})`);
 
-        // Show all state for debugging
-        this.logBrowserState();
-
         // Check cache first if not forcing a refresh
         if (!forceRefresh) {
             const cachedEvents = this.getFromCache();
@@ -35,38 +32,21 @@ export class EventService {
                 : '/.netlify/functions/get-events';
 
             console.log(`Fetching events from ${url}`);
-
-            // Log the network request details
-            const startTime = Date.now();
-
             const response = await fetch(url);
 
-            console.log(`Network response received in ${Date.now() - startTime}ms, status: ${response.status}`);
-
             if (!response.ok) {
-                throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
+                throw new Error(`Failed to fetch events: ${response.statusText}`);
             }
 
             const data = await response.json();
-            console.log(`Response parsed from get-events:`, data);
+            console.log(`Response from get-events:`, data);
 
             if (!data.success) {
                 throw new Error(data.error || 'Failed to fetch events');
             }
 
-            // Validate events array
-            if (!data.events || !Array.isArray(data.events)) {
-                console.error('Invalid events data received:', data);
-                throw new Error('Events data is invalid or missing');
-            }
-
             const events: EventData[] = data.events;
-            console.log(`Received ${events.length} events from API with mode: ${data.mode || 'unknown'}`);
-
-            // Detailed logging of the first event if available
-            if (events.length > 0) {
-                console.log('First event example:', JSON.stringify(events[0], null, 2));
-            }
+            console.log(`Received ${events.length} events from API`);
 
             // Save to cache
             this.saveToCache(events);
@@ -96,16 +76,10 @@ export class EventService {
                 : '/.netlify/functions/trigger-scrape';
 
             console.log(`Triggering scraper update via ${endpoint}`);
-
-            // Log the network request details
-            const startTime = Date.now();
-
             const response = await fetch(endpoint);
 
-            console.log(`Network response received in ${Date.now() - startTime}ms, status: ${response.status}`);
-
             if (!response.ok) {
-                throw new Error(`Failed to trigger update: ${response.status} ${response.statusText}`);
+                throw new Error(`Failed to trigger update: ${response.statusText}`);
             }
 
             const data = await response.json();
@@ -115,7 +89,7 @@ export class EventService {
                 throw new Error(data.error || 'Failed to trigger update');
             }
 
-            console.log(`Scraper update triggered successfully, found ${data.count || 0} events`);
+            console.log('Scraper update triggered successfully');
             return true;
         } catch (error) {
             console.error('Error triggering update:', error);
@@ -141,7 +115,6 @@ export class EventService {
             console.log(`Cache age: ${Math.round(age/1000)} seconds (max: ${Math.round(this.CACHE_DURATION/1000)} seconds)`);
 
             if (ignoreExpiration || age < this.CACHE_DURATION) {
-                console.log(`Found ${parsedCache.data.length} events in valid cache`);
                 return parsedCache.data;
             } else {
                 console.log('Cache expired');
@@ -165,78 +138,5 @@ export class EventService {
         };
 
         localStorage.setItem(this.CACHE_KEY, JSON.stringify(cacheData));
-    }
-
-    /**
-     * Log browser state for debugging
-     */
-    private static logBrowserState(): void {
-        // Log network status
-        console.log(`Network status: ${navigator.onLine ? 'online' : 'offline'}`);
-
-        // Log localStorage state
-        try {
-            console.log('LocalStorage state:');
-            const cacheKeys = Object.keys(localStorage).filter(key =>
-                key === this.CACHE_KEY || key.includes('event')
-            );
-
-            for (const key of cacheKeys) {
-                const value = localStorage.getItem(key);
-                console.log(`- ${key}: ${value ? `${value.substring(0, 50)}...` : 'null'}`);
-            }
-        } catch (e) {
-            console.error('Error accessing localStorage:', e);
-        }
-    }
-
-    /**
-     * Direct debug method to fetch and display raw event data
-     */
-    static async debugFetchEvents(): Promise<void> {
-        try {
-            console.log('DIRECT DEBUG FETCH:');
-
-            const endpoints = [
-                '/.netlify/functions/get-events',
-                '/.netlify/functions/get-events?refresh=true',
-                '/.netlify/functions/test-events' // Test endpoint that always returns events
-            ];
-
-            for (const endpoint of endpoints) {
-                console.log(`Fetching ${endpoint}...`);
-                const startTime = Date.now();
-
-                try {
-                    const response = await fetch(endpoint);
-                    console.log(`${endpoint} response in ${Date.now() - startTime}ms:`, {
-                        status: response.status,
-                        statusText: response.statusText,
-                        headers: Object.fromEntries([...response.headers.entries()])
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log(`${endpoint} data:`, {
-                            success: data.success,
-                            mode: data.mode,
-                            count: data.events?.length,
-                            fromCache: data.fromCache
-                        });
-
-                        // Test if we can directly load these events
-                        if (data.events && data.events.length > 0) {
-                            console.log('Attempting to directly use events from this endpoint...');
-                            this.saveToCache(data.events);
-                            window.location.reload();
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Error fetching ${endpoint}:`, error);
-                }
-            }
-        } catch (e) {
-            console.error('Debug fetch error:', e);
-        }
     }
 }

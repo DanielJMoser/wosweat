@@ -1,0 +1,120 @@
+import { EventData } from '../../shared/types/events';
+
+interface CachedData<T> {
+    data: T;
+    timestamp: number;
+}
+
+export class EventService {
+    private static CACHE_KEY = 'cached_events';
+    private static CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    /**
+     * Get events from the API or cache
+     */
+    static async getEvents(forceRefresh = false): Promise<EventData[]> {
+        // Check cache first if not forcing a refresh
+        if (!forceRefresh) {
+            const cachedEvents = this.getFromCache();
+            if (cachedEvents) {
+                console.log('Using cached events');
+                return cachedEvents;
+            }
+        }
+
+        // If not in cache or expired, fetch from API
+        try {
+            const response = await fetch('/.netlify/functions/get-events');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch events: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to fetch events');
+            }
+
+            const events: EventData[] = data.events;
+
+            // Save to cache
+            this.saveToCache(events);
+
+            return events;
+        } catch (error) {
+            console.error('Error fetching events:', error);
+
+            // If we have expired cache, use it as fallback
+            const expiredCache = this.getFromCache(true);
+            if (expiredCache) {
+                console.log('Using expired cache as fallback');
+                return expiredCache;
+            }
+
+            throw error;
+        }
+    }
+
+    /**
+     * Trigger a manual update of the events data
+     */
+    static async triggerUpdate(url?: string): Promise<boolean> {
+        try {
+            const endpoint = url
+                ? `/.netlify/functions/trigger-scrape?url=${encodeURIComponent(url)}`
+                : '/.netlify/functions/trigger-scrape';
+
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+                throw new Error(`Failed to trigger update: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to trigger update');
+            }
+
+            // If successful, refresh the cache
+            await this.getEvents(true);
+
+            return true;
+        } catch (error) {
+            console.error('Error triggering update:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Get events from the local cache
+     */
+    private static getFromCache(ignoreExpiration = false): EventData[] | null {
+        const cached = localStorage.getItem(this.CACHE_KEY);
+        if (!cached) return null;
+
+        try {
+            const parsedCache: CachedData<EventData[]> = JSON.parse(cached);
+            const now = Date.now();
+
+            if (ignoreExpiration || now - parsedCache.timestamp < this.CACHE_DURATION) {
+                return parsedCache.data;
+            }
+        } catch (e) {
+            localStorage.removeItem(this.CACHE_KEY);
+        }
+
+        return null;
+    }
+
+    /**
+     * Save events to the local cache
+     */
+    private static saveToCache(data: EventData[]): void {
+        const cacheData: CachedData<EventData[]> = {
+            data,
+            timestamp: Date.now()
+        };
+
+        localStorage.setItem(this.CACHE_KEY, JSON.stringify(cacheData));
+    }
+}

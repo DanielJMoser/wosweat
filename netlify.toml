@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
   functions = "netlify/functions"
-  publish = "wosweat"
+  publish = "dist"
 
 [functions]
   node_bundler = "esbuild"
@@ -9,6 +9,6 @@
 
 [dev]
   functions = "netlify/functions"
-  publish = "wosweat"
+  publish = "dist"
   port = 8888
   autoLaunch = true

@@ -14,9 +14,8 @@
   autoLaunch = true
 
 [[plugins]]
-  package = "@netlify/plugin-functions-scheduled-event"
+  package = "@netlify/plugin-scheduled-functions"
 
   [plugins.inputs]
     # Run the scraper function daily at midnight UTC
-    scrape-events-function = "scheduled-scrape"
-    schedule = "0 0 * * *"
+    daily_midnight = "scheduled-scrape"

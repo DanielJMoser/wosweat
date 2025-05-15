@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { getStoredEvents, scrapeEvents } from './utils/scraper-utils';
+import { getStoredEvents, scrapeEvents, storeEvents } from './utils/scraper-utils';
 import { EventData } from '../../shared/types/events';
 
 export const handler: Handler = async (event) => {
@@ -22,77 +22,116 @@ export const handler: Handler = async (event) => {
     }
 
     try {
-        // Check if we're in test mode
-        if (event.queryStringParameters?.test === 'true') {
-            console.log('Running in test mode with sample events');
-            const sampleEvents = generateSampleEvents();
+        // Log query parameters for debugging
+        console.log('Query parameters:', event.queryStringParameters);
 
+        // Force a refresh if the force parameter is set to true
+        const forceRefresh = event.queryStringParameters?.refresh === 'true';
+
+        // Skip cache and test mode if we're forcing a refresh
+        if (!forceRefresh) {
+            // Check if we're in test mode
+            if (event.queryStringParameters?.test === 'true') {
+                console.log('Running in test mode with sample events');
+                const sampleEvents = generateSampleEvents();
+
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        events: sampleEvents,
+                        count: sampleEvents.length,
+                        fromCache: false,
+                        mode: 'test',
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+
+            // Try to get cached events first (if not forcing a refresh)
+            const cachedEvents = await getStoredEvents();
+            if (cachedEvents.length > 0) {
+                console.log(`Using ${cachedEvents.length} cached events`);
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        events: cachedEvents,
+                        count: cachedEvents.length,
+                        fromCache: true,
+                        mode: 'cached',
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+        }
+
+        console.log('Fetching fresh events data');
+
+        // Attempt to scrape events from the target sites
+        const targetSites = [
+            'https://www.treibhaus.at/programm',
+            'https://pmk.or.at/termine'
+        ];
+
+        const useJsRendering = event.queryStringParameters?.js === 'true';
+
+        let allEvents: EventData[] = [];
+
+        // Try each site in sequence
+        for (const site of targetSites) {
+            try {
+                console.log(`Attempting to scrape ${site}`);
+                const siteEvents = await scrapeEvents(site, useJsRendering);
+                console.log(`Successfully scraped ${siteEvents.length} events from ${site}`);
+                allEvents = [...allEvents, ...siteEvents];
+            } catch (siteError) {
+                console.error(`Error scraping ${site}:`, siteError);
+                // Continue with the next site
+            }
+        }
+
+        console.log(`Retrieved a total of ${allEvents.length} events from all sites`);
+
+        // Store events for future use if we found any
+        if (allEvents.length > 0) {
+            try {
+                await storeEvents(allEvents);
+                console.log(`Successfully stored ${allEvents.length} events`);
+            } catch (storageError) {
+                console.error('Failed to store events:', storageError);
+            }
+
+            // Return the real events we found
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
                     success: true,
-                    events: sampleEvents,
-                    count: sampleEvents.length,
+                    events: allEvents,
+                    count: allEvents.length,
                     fromCache: false,
+                    mode: 'scraped',
                     timestamp: new Date().toISOString()
                 })
             };
         }
 
-        // Retrieve stored events
-        let events = await getStoredEvents();
-        let fromCache = true;
-
-        console.log(`Retrieved ${events.length} events from storage`);
-
-        // If no events are in the cache or a force refresh is requested, fetch fresh data
-        if (events.length === 0 || event.queryStringParameters?.refresh === 'true') {
-            console.log('No cached events found or refresh requested. Fetching fresh data.');
-
-            // Attempt to scrape events from the target sites
-            const targetSites = [
-                'https://www.treibhaus.at/programm',
-                'https://pmk.or.at/termine'
-            ];
-
-            const useJsRendering = event.queryStringParameters?.js === 'true';
-
-            let allEvents: EventData[] = [];
-
-            // Try each site in sequence
-            for (const site of targetSites) {
-                try {
-                    console.log(`Attempting to scrape ${site}`);
-                    const siteEvents = await scrapeEvents(site, useJsRendering);
-                    console.log(`Successfully scraped ${siteEvents.length} events from ${site}`);
-                    allEvents = [...allEvents, ...siteEvents];
-                } catch (siteError) {
-                    console.error(`Error scraping ${site}:`, siteError);
-                    // Continue with the next site
-                }
-            }
-
-            events = allEvents;
-            fromCache = false;
-
-            console.log(`Retrieved ${events.length} fresh events in total`);
-
-            // If we still have no events, use fallback sample events
-            if (events.length === 0) {
-                console.log('No events found from any source. Using fallback sample events.');
-                events = generateSampleEvents();
-            }
-        }
+        // If we didn't find any events, use fallback sample events
+        console.log('No events found from any source. Using fallback sample events.');
+        const sampleEvents = generateSampleEvents();
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                events,
-                count: events.length,
-                fromCache,
+                events: sampleEvents,
+                count: sampleEvents.length,
+                fromCache: false,
+                mode: 'fallback',
                 timestamp: new Date().toISOString()
             })
         };
@@ -110,6 +149,7 @@ export const handler: Handler = async (event) => {
                 events: sampleEvents,
                 count: sampleEvents.length,
                 fromCache: false,
+                mode: 'error',
                 timestamp: new Date().toISOString(),
                 error: error instanceof Error ? error.message : 'Unknown error retrieving events'
             })

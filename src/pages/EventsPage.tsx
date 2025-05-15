@@ -5,6 +5,12 @@ import {
     IonPage,
     IonTitle,
     IonToolbar,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonSpinner,
+    IonRefresher,
+    IonRefresherContent,
     IonButton,
     IonToast,
     IonSkeletonText,
@@ -14,16 +20,18 @@ import {
     IonCardSubtitle,
     IonCardContent,
     IonFooter,
-    IonRefresher,
-    IonRefresherContent,
+    IonBadge,
     IonSearchbar,
+    IonSelect,
+    IonSelectOption,
+    RefresherEventDetail,
     IonLoading,
     IonIcon,
-    RefresherEventDetail,
-    IonChip,
-    IonLabel
+    IonFab,
+    IonFabButton,
+    IonText
 } from '@ionic/react';
-import { refresh, calendar, locate, link } from 'ionicons/icons';
+import { refresh, calendar, time, locate, link } from 'ionicons/icons';
 import { useEvents } from '../context/EventsContext';
 import './EventsPage.css';
 
@@ -53,9 +61,10 @@ const EventsPage: React.FC = () => {
     const [showLoading, setShowLoading] = useState<boolean>(false);
     const [debugInfo, setDebugInfo] = useState<string>('');
 
-    // Update debug info when state changes
+    // Debug effect - log state changes
     useEffect(() => {
-        setDebugInfo(`Events: ${state.events.length}, Loading: ${state.loading}, Error: ${state.error || 'none'}`);
+        console.log('Events state updated:', state);
+        setDebugInfo(`Events: ${state.events.length}, Loading: ${state.loading}, Error: ${state.error}, Last updated: ${state.lastUpdated?.toLocaleString() || 'never'}`);
     }, [state]);
 
     // Handle refresh (pull-to-refresh)
@@ -66,7 +75,7 @@ const EventsPage: React.FC = () => {
             setToastMessage('Events refreshed successfully');
             setShowToast(true);
         } catch (error) {
-            console.error('Error during refresh:', error);
+            console.error('Refresh error:', error);
             setToastMessage('Failed to refresh events');
             setShowToast(true);
         } finally {
@@ -76,14 +85,14 @@ const EventsPage: React.FC = () => {
 
     // Handle manual update
     const handleManualUpdate = async () => {
-        console.log('Update Now button clicked');
+        console.log('Manual update button clicked');
         setShowLoading(true);
         try {
             await triggerUpdate();
             setToastMessage('Events updated successfully');
             setShowToast(true);
         } catch (error) {
-            console.error('Error during manual update:', error);
+            console.error('Manual update error:', error);
             setToastMessage('Failed to update events');
             setShowToast(true);
         } finally {
@@ -105,13 +114,11 @@ const EventsPage: React.FC = () => {
 
     // Sort events by date (most recent first)
     const sortedEvents = [...filteredEvents].sort((a, b) => {
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
+        const dateA = new Date(a.date).getTime() || 0;
+        const dateB = new Date(b.date).getTime() || 0;
 
         return dateA - dateB; // Ascending order (upcoming events first)
     });
-
-    console.log(`Rendering EventsPage with ${state.events.length} events, ${sortedEvents.length} after filtering`);
 
     return (
         <IonPage>
@@ -130,10 +137,12 @@ const EventsPage: React.FC = () => {
             </IonHeader>
 
             <IonContent>
-                {/* Debug Info */}
-                <IonChip color="tertiary" onClick={() => console.log('Full state:', state)}>
-                    <IonLabel>{debugInfo}</IonLabel>
-                </IonChip>
+                {/* Debug info - remove in production */}
+                <div className="ion-padding">
+                    <IonText color="medium">
+                        <small>{debugInfo}</small>
+                    </IonText>
+                </div>
 
                 {/* Pull-to-refresh */}
                 <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
@@ -169,22 +178,26 @@ const EventsPage: React.FC = () => {
                 )}
 
                 {/* No events found */}
-                {!state.loading && sortedEvents.length === 0 && (
+                {!state.loading && sortedEvents.length === 0 && !state.error && (
                     <div className="ion-text-center ion-padding">
                         <h3>No events found</h3>
                         {searchText ? (
                             <p>Try adjusting your search criteria</p>
-                        ) : state.error ? (
-                            <>
-                                <p>Error: {state.error}</p>
-                                <IonButton onClick={() => fetchEvents(true)}>Try Again</IonButton>
-                            </>
                         ) : (
                             <>
                                 <p>No upcoming events in the database</p>
                                 <IonButton onClick={() => fetchEvents(true)}>Try Again</IonButton>
                             </>
                         )}
+                    </div>
+                )}
+
+                {/* Error state */}
+                {!state.loading && state.error && (
+                    <div className="ion-text-center ion-padding">
+                        <h3>Error loading events</h3>
+                        <p>{state.error}</p>
+                        <IonButton onClick={() => fetchEvents(true)}>Try Again</IonButton>
                     </div>
                 )}
 

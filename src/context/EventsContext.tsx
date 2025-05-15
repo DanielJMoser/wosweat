@@ -16,7 +16,7 @@ type EventsAction =
     | { type: 'FETCH_EVENTS_SUCCESS', payload: EventData[] }
     | { type: 'FETCH_EVENTS_ERROR', payload: string }
     | { type: 'TRIGGER_UPDATE_START' }
-    | { type: 'TRIGGER_UPDATE_SUCCESS' }
+    | { type: 'TRIGGER_UPDATE_SUCCESS', payload: EventData[] }
     | { type: 'TRIGGER_UPDATE_ERROR', payload: string };
 
 // Initial state
@@ -53,7 +53,6 @@ const eventsReducer = (state: EventsState, action: EventsAction): EventsState =>
                 error: null,
             };
         case 'FETCH_EVENTS_SUCCESS':
-            console.log('FETCH_EVENTS_SUCCESS with payload:', action.payload);
             return {
                 ...state,
                 loading: false,
@@ -66,7 +65,6 @@ const eventsReducer = (state: EventsState, action: EventsAction): EventsState =>
                 ...state,
                 loading: false,
                 error: action.payload,
-                // Keep existing events on error
             };
         case 'TRIGGER_UPDATE_START':
             return {
@@ -78,6 +76,8 @@ const eventsReducer = (state: EventsState, action: EventsAction): EventsState =>
             return {
                 ...state,
                 loading: false,
+                events: action.payload,
+                lastUpdated: new Date(),
                 error: null,
             };
         case 'TRIGGER_UPDATE_ERROR':
@@ -97,14 +97,14 @@ export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Fetch events function
     const fetchEvents = async (forceRefresh = false) => {
-        console.log(`[EventsContext] fetchEvents called with forceRefresh=${forceRefresh}`);
         dispatch({ type: 'FETCH_EVENTS_START' });
         try {
+            console.log(`Fetching events (forceRefresh: ${forceRefresh})`);
             const events = await EventService.getEvents(forceRefresh);
-            console.log(`[EventsContext] fetchEvents got ${events.length} events`);
+            console.log(`Fetched ${events.length} events`);
             dispatch({ type: 'FETCH_EVENTS_SUCCESS', payload: events });
         } catch (error) {
-            console.error('[EventsContext] Error in fetchEvents:', error);
+            console.error('Error fetching events:', error);
             dispatch({
                 type: 'FETCH_EVENTS_ERROR',
                 payload: error instanceof Error ? error.message : 'Unknown error'
@@ -114,19 +114,22 @@ export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Trigger manual update function
     const triggerUpdate = async (url?: string) => {
-        console.log('[EventsContext] triggerUpdate called');
         dispatch({ type: 'TRIGGER_UPDATE_START' });
         try {
+            console.log('Triggering manual update...');
+            // Fixed: Don't call getEvents inside triggerUpdate to avoid double fetching
             const success = await EventService.triggerUpdate(url);
+
             if (success) {
-                dispatch({ type: 'TRIGGER_UPDATE_SUCCESS' });
-                // Always fetch fresh events after a successful trigger
-                await fetchEvents(true);
+                console.log('Manual update successful, fetching fresh events');
+                // Get the updated events after the update is complete
+                const events = await EventService.getEvents(true); // Force refresh to get latest data
+                dispatch({ type: 'TRIGGER_UPDATE_SUCCESS', payload: events });
             } else {
-                throw new Error('Trigger update failed');
+                throw new Error('Update failed');
             }
         } catch (error) {
-            console.error('[EventsContext] Error in triggerUpdate:', error);
+            console.error('Error triggering update:', error);
             dispatch({
                 type: 'TRIGGER_UPDATE_ERROR',
                 payload: error instanceof Error ? error.message : 'Unknown error'
@@ -136,12 +139,12 @@ export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Fetch events on component mount
     useEffect(() => {
-        console.log('[EventsContext] Initial fetch on mount');
+        console.log('EventsProvider mounted, fetching initial events');
         fetchEvents();
 
         // Set up auto-refresh every 5 minutes
         const refreshInterval = setInterval(() => {
-            console.log('[EventsContext] Auto-refresh interval triggered');
+            console.log('Auto-refresh triggered');
             fetchEvents();
         }, 5 * 60 * 1000);
 
@@ -149,8 +152,15 @@ export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return () => clearInterval(refreshInterval);
     }, []);
 
+    const contextValue = {
+        state,
+        dispatch,
+        fetchEvents,
+        triggerUpdate
+    };
+
     return (
-        <EventsContext.Provider value={{ state, dispatch, fetchEvents, triggerUpdate }}>
+        <EventsContext.Provider value={contextValue}>
             {children}
         </EventsContext.Provider>
     );

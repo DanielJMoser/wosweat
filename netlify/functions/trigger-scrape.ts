@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { scrapeEvents, storeEvents } from './utils/scraper-utils';
-import { EventData } from '../../shared/types/events';
+import {EventData} from "../../shared/types/events";
 
 export const handler: Handler = async (event) => {
     // Set CORS headers
@@ -19,69 +19,54 @@ export const handler: Handler = async (event) => {
         };
     }
 
+    console.log('Trigger scrape function called with params:', event.queryStringParameters);
+
     // Optional: Add authentication for the trigger
     const authToken = event.headers.authorization;
     if (process.env.TRIGGER_SECRET && (!authToken || authToken !== `Bearer ${process.env.TRIGGER_SECRET}`)) {
+        console.log('Unauthorized trigger attempt');
         return {
             statusCode: 401,
             headers,
-            body: JSON.stringify({ error: 'Unauthorized' })
+            body: JSON.stringify({ success: false, error: 'Unauthorized' })
         };
     }
 
     try {
-        console.log('Manual trigger received with params:', event.queryStringParameters);
-
-        // If a specific URL was provided, scrape only that URL
-        if (event.queryStringParameters?.url) {
-            const targetUrl = event.queryStringParameters.url;
-            const useJsRendering = event.queryStringParameters?.js === 'true';
-
-            console.log(`Scraping single URL: ${targetUrl}`);
-            const events = await scrapeEvents(targetUrl, useJsRendering);
-
-            // Store events
-            await storeEvents(events);
-
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({
-                    success: true,
-                    message: `Scraped and stored ${events.length} events from ${targetUrl}`,
-                    count: events.length
-                })
-            };
-        }
-
-        // If no URL provided, scrape all configured sites
-        console.log('Scraping all configured sites');
+        // Get the target sites to scrape
         const targetSites = [
             'https://www.treibhaus.at/programm',
             'https://pmk.or.at/termine'
-            // Add more sites as needed
         ];
 
+        // Use a custom URL if provided
+        if (event.queryStringParameters?.url) {
+            targetSites.push(event.queryStringParameters.url);
+        }
+
+        // Determine if we need JavaScript rendering
         const useJsRendering = event.queryStringParameters?.js === 'true';
+
+        console.log(`Starting to scrape ${targetSites.length} sites`);
+
         let allEvents: EventData[] = [];
 
-        // Scrape each site
+        // Try each site in sequence
         for (const site of targetSites) {
             try {
-                console.log(`Attempting to scrape ${site}`);
+                console.log(`Scraping ${site}`);
                 const siteEvents = await scrapeEvents(site, useJsRendering);
                 console.log(`Successfully scraped ${siteEvents.length} events from ${site}`);
                 allEvents = [...allEvents, ...siteEvents];
             } catch (siteError) {
                 console.error(`Error scraping ${site}:`, siteError);
-                // Continue with next site
+                // Continue with the next site
             }
         }
 
-        console.log(`Total events scraped: ${allEvents.length}`);
-
         // Store all events
         if (allEvents.length > 0) {
+            console.log(`Storing ${allEvents.length} total events`);
             await storeEvents(allEvents);
             console.log(`Successfully stored ${allEvents.length} events`);
         } else {

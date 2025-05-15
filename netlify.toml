@@ -12,10 +12,3 @@
   publish = "public"
   port = 8888
   autoLaunch = true
-
-[[plugins]]
-  package = "@netlify/plugin-scheduled-functions"
-
-  [plugins.inputs]
-    # Run the scraper function daily at midnight UTC
-    daily_midnight = "scheduled-scrape"

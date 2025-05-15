@@ -5,10 +5,6 @@ import {
     IonPage,
     IonTitle,
     IonToolbar,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonSpinner,
     IonRefresher,
     IonRefresherContent,
     IonButton,
@@ -20,19 +16,18 @@ import {
     IonCardSubtitle,
     IonCardContent,
     IonFooter,
-    IonBadge,
     IonSearchbar,
-    IonSelect,
-    IonSelectOption,
     RefresherEventDetail,
     IonLoading,
     IonIcon,
-    IonFab,
-    IonFabButton,
-    IonText
+    IonText,
+    IonRow,
+    IonCol,
+    IonGrid,
 } from '@ionic/react';
-import { refresh, calendar, time, locate, link } from 'ionicons/icons';
+import { refresh, calendar, locate, link, bug } from 'ionicons/icons';
 import { useEvents } from '../context/EventsContext';
+import { EventService } from '../services/events-service';
 import './EventsPage.css';
 
 // Helper function to format dates
@@ -139,9 +134,30 @@ const EventsPage: React.FC = () => {
             <IonContent>
                 {/* Debug info - remove in production */}
                 <div className="ion-padding">
-                    <IonText color="medium">
-                        <small>{debugInfo}</small>
-                    </IonText>
+                    <IonGrid>
+                        <IonRow>
+                            <IonCol>
+                                <IonText color="medium">
+                                    <small>{debugInfo}</small>
+                                </IonText>
+                            </IonCol>
+                            <IonCol size="auto">
+                                <IonButton size="small" color="medium" onClick={async () => {
+                                    console.log('Debug button clicked');
+                                    try {
+                                        await EventService.debugFetchEvents();
+                                        setToastMessage('Check console for debug info');
+                                        setShowToast(true);
+                                    } catch (error) {
+                                        console.error('Debug error:', error);
+                                    }
+                                }}>
+                                    <IonIcon slot="start" icon={bug} />
+                                    Debug
+                                </IonButton>
+                            </IonCol>
+                        </IonRow>
+                    </IonGrid>
                 </div>
 
                 {/* Pull-to-refresh */}

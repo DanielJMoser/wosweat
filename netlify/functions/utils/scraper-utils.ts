@@ -1,6 +1,5 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { CheerioAPI } from "cheerio"; // Add this import for CheerioAPI type
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 import { EventData } from "../../../shared/types/events";
@@ -16,16 +15,14 @@ export async function scrapeEvents(url: string, useJsRendering = false): Promise
 
         // Force JavaScript rendering for sites that require it
         const jsRenderingSites = [
-            'music-hall.at'
+            'music-hall.at',
+            'diebaeckerei.at'
         ];
 
-        // Die Bäckerei needs JS rendering due to lazy loading and dynamic content
-        if (url.includes('diebaeckerei.at')) {
-            console.log('Using Puppeteer for diebaeckerei.at');
-            events = await scrapeWithPuppeteer(url);
-        }
         // Check if the current URL is in the jsRenderingSites array
-        else if (useJsRendering || jsRenderingSites.some(site => url.includes(site))) {
+        const needsJsRendering = useJsRendering || jsRenderingSites.some(site => url.includes(site));
+
+        if (needsJsRendering) {
             events = await scrapeWithPuppeteer(url);
         } else {
             events = await scrapeWithCheerio(url);
@@ -122,18 +119,18 @@ function getSelectorsForSite(url: string) {
             venue: 'PMK Innsbruck'
         };
     } else if (url.includes('artilleryproductions.bigcartel.com')) {
-        // Special case for BigCartel Artillery Productions
         return {
-            eventContainer: '.product',
-            title: '.product_name, h4',
-            price: 'h5',
+            eventContainer: '.product-list-item, .product, li',
+            title: '.product-title, h2, .title',
+            date: '.product-price, .date-info, .date', // Note: BigCartel might include date in title or description
+            description: '.product-description, .description, p',
             url: 'a',
-            image: 'img',
+            image: '.product-image img, img',
             venue: 'Artillery Productions'
         };
     } else if (url.includes('music-hall.at')) {
         return {
-            eventContainer: '.event-list, .event-item, .dhvc-event, li.event, .event, article, .entry, .item',
+            eventContainer: '.event-item, .dhvc-event, li.event, .event, .col-md-12',
             title: '.event-title, h3, .title',
             date: '.event-date, .date, time, .event-start-date',
             description: '.event-content, .description, .excerpt, p',
@@ -142,24 +139,13 @@ function getSelectorsForSite(url: string) {
             venue: 'Music Hall Innsbruck'
         };
     } else if (url.includes('diebaeckerei.at')) {
-        // Die Bäckerei has both regular events and recurring events with different structures
         return {
-            // Regular events
-            eventContainer: '.event-thumb',
-            title: '.event-thumb__title',
-            date: '.event-thumb__day',
-            time: '.event-thumb__time',
-            weekday: '.event-thumb__weekday',
-            description: '.event-thumb__excerpt',
-            url: '.event-thumb',
-            image: '.event-thumb__img',
-
-            // Recurring events
-            recurringEventContainer: '.recurring-event__thumb',
-            recurringTitle: '.recurring-event-thumb__title',
-            recurringDate: '.recurring-event-thumb__day',
-            recurringImage: '.recurring-event-thumb__img',
-
+            eventContainer: '.event, .veranstaltung, article, .blog-post',
+            title: '.title, h1, h2, h3, .post-title',
+            date: '.date, time, .post-date, .event-date',
+            description: '.content, .post-content, .description, p',
+            url: 'a',
+            image: 'img',
             venue: 'Die Bäckerei'
         };
     }
@@ -180,26 +166,10 @@ function getSelectorsForSite(url: string) {
  * Extract and normalize date information from various formats
  */
 function extractDateFromText(dateText: string): string {
-    if (!dateText) return '';
-
     console.log(`Attempting to extract date from: "${dateText}"`);
 
     // Clean the date text
     const cleanDateText = dateText.trim().replace(/\s+/g, ' ');
-
-    // Try to extract date from a title with format "Event Name - DD.MM.YYYY"
-    const dateAtEnd = cleanDateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-    if (dateAtEnd) {
-        const [_, day, month, year] = dateAtEnd;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-
-    // Artillery Productions specific format "Event - DD.MM.YYYY"
-    const artilleryDateMatch = cleanDateText.match(/.*?(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-    if (artilleryDateMatch) {
-        const [_, day, month, year] = artilleryDateMatch;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
 
     // Try German format: DD.MM.YYYY
     const germanDateMatch = cleanDateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
@@ -209,7 +179,7 @@ function extractDateFromText(dateText: string): string {
     }
 
     // Try abbreviated day format: Do. DD.MM.YYYY
-    const abbrevDayMatch = cleanDateText.match(/([A-Za-zäöüÄÖÜ]{2,3})\.?\s*(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
+    const abbrevDayMatch = cleanDateText.match(/([A-Za-zäöüÄÖÜ]{2})\.\s*(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
     if (abbrevDayMatch) {
         const [_, _day, day, month, year = new Date().getFullYear()] = abbrevDayMatch;
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
@@ -217,8 +187,8 @@ function extractDateFromText(dateText: string): string {
 
     // Try common date formats: DD. Month YYYY or DD.MM.
     // First, check for month names in German or English
-    const monthNames: { [key: string]: string } = {
-        'januar': '01', 'january': '01', 'jänner': '01', 'jan': '01',
+    const monthNames = {
+        'januar': '01', 'januar': '01', 'jänner': '01', 'january': '01', 'jan': '01',
         'februar': '02', 'february': '02', 'feb': '02',
         'märz': '03', 'march': '03', 'mar': '03',
         'april': '04', 'apr': '04',
@@ -236,15 +206,21 @@ function extractDateFromText(dateText: string): string {
     const monthNameMatch = cleanDateText.toLowerCase().match(/(\d{1,2})\.?\s+([a-zäöü]+)\.?\s+(\d{4})/);
     if (monthNameMatch) {
         const [_, day, monthName, year] = monthNameMatch;
-        const monthKey = monthName.toLowerCase();
-        const month = monthNames[monthKey];
+        const month = monthNames[monthName.toLowerCase()];
         if (month) {
             return `${year}-${month}-${day.padStart(2, '0')}`;
         }
     }
 
+    // Try to extract date from bigcartel style: typically in a title like "Event Name - 05.16.2025"
+    const bigCartelMatch = cleanDateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (bigCartelMatch) {
+        const [_, month, day, year] = bigCartelMatch;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
     // If no match found, return the original text
-    return cleanDateText;
+    return dateText;
 }
 
 /**
@@ -253,244 +229,6 @@ function extractDateFromText(dateText: string): string {
 function cleanText(text: string): string {
     if (!text) return '';
     return text.replace(/\s+/g, ' ').trim();
-}
-
-/**
- * Extract event data from Artillery Productions BigCartel site
- * Special handling for this site structure
- */
-function extractArtilleryEvents($: CheerioAPI, url: string): EventData[] {
-    console.log('Using specialized extraction for Artillery Productions');
-    const events: EventData[] = [];
-
-    // Find each product
-    $('.product').each((index: number, element: cheerio.Element) => {
-        try {
-            const productElement = $(element);
-
-            // Extract the title which contains the event details
-            const title = cleanText(productElement.find('.product_name, h4').text());
-
-            if (!title) {
-                console.log(`Skipping product ${index}: No title found`);
-                return; // Skip this item
-            }
-
-            console.log(`Processing event ${index}: ${title}`);
-
-            // Artillery products have dates embedded in the title
-            // Format is typically "EVENT NAME - DD.MM.YYYY"
-            let eventDate = '';
-            let finalTitle = title;
-
-            // Try to extract date from the title
-            const dateInTitle = title.match(/.*?(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-            if (dateInTitle) {
-                const [_, day, month, year] = dateInTitle;
-                eventDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                console.log(`  Extracted date: ${eventDate}`);
-            }
-
-            // Get price as additional info
-            const price = cleanText(productElement.find('h5').text());
-
-            // Get URL and image
-            const productUrl = $(element).find('a').attr('href') || '';
-            const fullUrl = productUrl ? new URL(productUrl, url).toString() : url;
-
-            const imageUrl = $(element).find('img').attr('src') || undefined;
-            const fullImageUrl = imageUrl ? new URL(imageUrl, url).toString() : undefined;
-
-            // Generate ID
-            const id = `event-${index}-${Date.now()}`;
-
-            // Add to events array
-            events.push({
-                id,
-                title: finalTitle,
-                date: eventDate,
-                description: price ? `Price: ${price}` : '',
-                url: fullUrl,
-                venue: 'Artillery Productions',
-                imageUrl: fullImageUrl,
-            });
-
-            console.log(`  Added event: ${finalTitle}`);
-        } catch (error) {
-            console.warn(`Error parsing Artillery event at index ${index}:`, error);
-        }
-    });
-
-    return events;
-}
-
-/**
- * Extract events from Die Bäckerei site
- * Handles both regular and recurring events with different structures
- */
-function extractBaeckereiEvents($: CheerioAPI, url: string): EventData[] {
-    console.log('Using specialized extraction for Die Bäckerei');
-    const events: EventData[] = [];
-
-    // Get selectors for Die Bäckerei
-    const selectors = getSelectorsForSite(url);
-
-    // 1. Process regular events
-    console.log('Processing regular events');
-    $(selectors.eventContainer).each((index: number, element: cheerio.Element) => {
-        try {
-            const eventElement = $(element);
-
-            // Check if event is cancelled
-            const isCancelled = eventElement.hasClass('is-cancelled');
-
-            // Extract the title
-            const title = cleanText(eventElement.find(selectors.title).text());
-
-            if (!title) {
-                console.log(`Skipping event ${index}: No title found`);
-                return; // Skip this item
-            }
-
-            console.log(`Processing event ${index}: ${title}`);
-
-            // Extract date components
-            const dayElem = eventElement.find(selectors.date);
-            const timeElem = eventElement.find(selectors.time);
-            const weekdayElem = eventElement.find(selectors.weekday);
-
-            // Get the date string and clean it
-            const dateText = cleanText(dayElem.text());
-            const timeText = cleanText(timeElem.text());
-            const weekdayText = cleanText(weekdayElem.text());
-
-            console.log(`  Date components: ${weekdayText} ${dateText} ${timeText}`);
-
-            // Try to get date from datetime attribute first (most reliable)
-            let eventDate = dayElem.attr('datetime') || '';
-
-            // If no datetime attribute, try to extract from text
-            if (!eventDate) {
-                eventDate = extractDateFromText(dateText);
-            } else {
-                // Process the datetime attribute to standard format
-                eventDate = extractDateFromText(eventDate);
-            }
-
-            console.log(`  Extracted date: ${eventDate}`);
-
-            // Get description
-            const description = cleanText(eventElement.find(selectors.description).text());
-
-            // Get URL and image
-            const eventUrl = eventElement.attr('href') || '';
-            const fullUrl = eventUrl ? new URL(eventUrl, url).toString() : url;
-
-            const imageUrl = eventElement.find(selectors.image).attr('src') || undefined;
-            const fullImageUrl = imageUrl ? new URL(imageUrl, url).toString() : undefined;
-
-            // Get tags if available
-            const tagsElements = eventElement.find('.b-tag');
-            const tags: string[] = [];
-            tagsElements.each((_, tagElement) => {
-                const tagText = cleanText($(tagElement).text());
-                if (tagText) tags.push(tagText);
-            });
-
-            // Create event description with tags and cancellation status
-            let fullDescription = description;
-            if (tags.length > 0) {
-                fullDescription += `\n\nCategories: ${tags.join(', ')}`;
-            }
-
-            if (isCancelled) {
-                fullDescription = `[CANCELLED] ${fullDescription}`;
-            }
-
-            // Generate ID
-            const id = `event-${index}-${Date.now()}`;
-
-            // Add to events array
-            events.push({
-                id,
-                title: isCancelled ? `[CANCELLED] ${title}` : title,
-                date: eventDate,
-                description: fullDescription,
-                url: fullUrl,
-                venue: selectors.venue,
-                imageUrl: fullImageUrl,
-            });
-
-            console.log(`  Added event: ${title}`);
-        } catch (error) {
-            console.warn(`Error parsing Die Bäckerei event at index ${index}:`, error);
-        }
-    });
-
-    // 2. Process recurring events
-    console.log('Processing recurring events');
-    $(selectors.recurringEventContainer).each((index: number, element: cheerio.Element) => {
-        try {
-            const eventElement = $(element);
-
-            // Extract the title
-            const title = cleanText(eventElement.find(selectors.recurringTitle).text());
-
-            if (!title) {
-                console.log(`Skipping recurring event ${index}: No title found`);
-                return; // Skip this item
-            }
-
-            console.log(`Processing recurring event ${index}: ${title}`);
-
-            // Extract date
-            const dateElem = eventElement.find(selectors.recurringDate);
-
-            // Get the date string
-            const dateText = cleanText(dateElem.text());
-            console.log(`  Date text: ${dateText}`);
-
-            // Try to get date from datetime attribute first
-            let eventDate = dateElem.attr('datetime') || '';
-
-            // If no datetime attribute, try to extract from text
-            if (!eventDate) {
-                eventDate = extractDateFromText(dateText);
-            } else {
-                // Process the datetime attribute to standard format
-                eventDate = extractDateFromText(eventDate);
-            }
-
-            console.log(`  Extracted date: ${eventDate}`);
-
-            // Get URL and image
-            const eventUrl = eventElement.attr('href') || '';
-            const fullUrl = eventUrl ? new URL(eventUrl, url).toString() : url;
-
-            const imageUrl = eventElement.find(selectors.recurringImage).attr('src') || undefined;
-            const fullImageUrl = imageUrl ? new URL(imageUrl, url).toString() : undefined;
-
-            // Generate ID
-            const id = `recurring-event-${index}-${Date.now()}`;
-
-            // Add to events array
-            events.push({
-                id,
-                title: `[Recurring] ${title}`,
-                date: eventDate,
-                description: `This is a recurring event at Die Bäckerei. Time: ${dateText}`,
-                url: fullUrl,
-                venue: selectors.venue,
-                imageUrl: fullImageUrl,
-            });
-
-            console.log(`  Added recurring event: ${title}`);
-        } catch (error) {
-            console.warn(`Error parsing Die Bäckerei recurring event at index ${index}:`, error);
-        }
-    });
-
-    return events;
 }
 
 /**
@@ -507,17 +245,6 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
 
         // Load HTML into Cheerio
         const $ = cheerio.load(html);
-
-        // Special case for Artillery Productions BigCartel
-        if (url.includes('artilleryproductions.bigcartel.com')) {
-            return extractArtilleryEvents($, url);
-        }
-
-        // Special case for Die Bäckerei
-        if (url.includes('diebaeckerei.at')) {
-            return extractBaeckereiEvents($, url);
-        }
-
         const events: EventData[] = [];
 
         // Get the appropriate selectors for this site
@@ -539,7 +266,7 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
             console.log(`- Divs with grid classes: ${$('.col-md-4, .col-sm-6, .col-lg-3').length}`);
         }
 
-        $(selectors.eventContainer).each((index: number, element: cheerio.Element) => {
+        $(selectors.eventContainer).each((index, element) => {
             try {
                 // Extract event details using Cheerio selectors
                 const title = cleanText($(element).find(selectors.title).first().text());
@@ -548,34 +275,45 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
                 const relativeUrl = $(element).find(selectors.url).attr('href') || '';
                 const imageUrl = $(element).find(selectors.image).attr('src') || undefined;
 
-                console.log(`Processing event ${index}: ${title}`);
+                console.log(`Processing event ${index}: ${title.substring(0, 30)}...`);
                 console.log(`  Date text: ${dateText}`);
 
                 // Process the date using our enhanced date extraction function
-                const date = extractDateFromText(dateText || title); // Try to extract from title if dateText is empty
+                const date = extractDateFromText(dateText);
                 console.log(`  Extracted date: ${date}`);
 
                 // Generate ID
                 const id = `event-${index}-${Date.now()}`;
 
-                // Check if we have enough info to add this event
-                const hasDate = date && date !== dateText && date !== title;
+                // Only add if we have at least a title and some date information
+                if (title && (dateText || title.includes('-'))) { // Some sites include date in title with a dash
+                    // For BigCartel, try to extract date from title if dateText is empty or just a price
+                    let finalDate = date;
+                    if (url.includes('bigcartel') && (!dateText || dateText.startsWith('$'))) {
+                        const dashIndex = title.lastIndexOf('-');
+                        if (dashIndex > 0) {
+                            const possibleDate = extractDateFromText(title.substring(dashIndex + 1));
+                            if (possibleDate !== title.substring(dashIndex + 1)) {
+                                finalDate = possibleDate;
+                                console.log(`  Extracted date from title: ${finalDate}`);
+                            }
+                        }
+                    }
 
-                if (title && (hasDate || dateText)) {
                     // Add to events array
                     events.push({
                         id,
                         title,
-                        date: hasDate ? date : dateText,
+                        date: finalDate,
                         description,
                         url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
                         venue: selectors.venue,
                         imageUrl: imageUrl ? new URL(imageUrl, url).toString() : undefined,
                     });
 
-                    console.log(`  Added event: ${title}`);
+                    console.log(`  Added event: ${title.substring(0, 30)}...`);
                 } else {
-                    console.log(`  Skipped event ${index}: Insufficient data (title: ${Boolean(title)}, date: ${hasDate || Boolean(dateText)})`);
+                    console.log(`  Skipped event ${index}: Insufficient data (title: ${Boolean(title)}, date: ${Boolean(dateText)})`);
                 }
             } catch (eventError) {
                 console.warn(`Error parsing event at index ${index}:`, eventError);
@@ -625,7 +363,7 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
         await page.setRequestInterception(true);
         page.on('request', request => {
             const resourceType = request.resourceType();
-            if (['document', 'xhr', 'fetch', 'script'].includes(resourceType)) {
+            if (['document', 'xhr', 'fetch'].includes(resourceType)) {
                 request.continue();
             } else {
                 request.abort();
@@ -647,46 +385,26 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
 
         console.log('Page loaded successfully');
 
-        // Site-specific waits and preparation
-        if (url.includes('diebaeckerei.at')) {
-            console.log('Waiting for Die Bäckerei content to load...');
+        // Wait for dynamic content to load for certain sites
+        if (url.includes('music-hall.at')) {
             try {
-                // Wait for events to load
-                await Promise.race([
-                    page.waitForSelector('.event-thumb', { timeout: 5000 }),
-                    page.waitForSelector('.recurring-event__thumb', { timeout: 5000 })
-                ]);
-
-                // Scroll down to load more content (helps with lazy loading)
-                await autoScroll(page);
-
-                console.log('Content loaded for Die Bäckerei');
+                await page.waitForSelector('.event-item, .dhvc-event', { timeout: 3000 });
             } catch (e) {
-                console.log('Timeout waiting for Die Bäckerei events, proceeding anyway');
+                console.log('Timeout waiting for event elements, proceeding anyway');
             }
-        } else if (url.includes('music-hall.at')) {
+        } else if (url.includes('diebaeckerei.at')) {
             try {
-                await page.waitForSelector('.event-list, .event-item, .dhvc-event, li.event, .event, article, .entry, .item', { timeout: 3000 });
+                await page.waitForSelector('.event, .veranstaltung, article, .blog-post', { timeout: 3000 });
             } catch (e) {
                 console.log('Timeout waiting for event elements, proceeding anyway');
             }
         }
 
-        // Get the page content and use Cheerio to parse it
+        // Get the page content and use Cheerio to parse it (more efficient than page.evaluate)
         const content = await page.content();
         console.log(`Received page content (${content.length} bytes)`);
 
         const $ = cheerio.load(content);
-
-        // Special case for Artillery Productions BigCartel
-        if (url.includes('artilleryproductions.bigcartel.com')) {
-            return extractArtilleryEvents($, url);
-        }
-
-        // Special case for Die Bäckerei
-        if (url.includes('diebaeckerei.at')) {
-            return extractBaeckereiEvents($, url);
-        }
 
         // Get the appropriate selectors for this site
         const selectors = getSelectorsForSite(url);
@@ -698,34 +416,8 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
         const containerCount = $(selectors.eventContainer).length;
         console.log(`Found ${containerCount} potential event containers`);
 
-        // Analyze the DOM structure if no containers found
-        if (containerCount === 0) {
-            console.log("DOM Analysis for debugging:");
-            // Log some common container patterns
-            console.log(`- Elements with 'event' in class: ${$('[class*="event"]').length}`);
-            console.log(`- Articles: ${$('article').length}`);
-            console.log(`- List items: ${$('li').length}`);
-            console.log(`- Divs with 'item' class: ${$('.item').length}`);
-            console.log(`- Divs with grid classes: ${$('.col-md-4, .col-sm-6, .col-lg-3').length}`);
-
-            // Try to look for the most common elements that might contain events
-            const commonElements = [
-                '.col-md-12', '.col-lg-12', '.col-md-6', '.col-lg-6',
-                '.col-md-4', '.col-lg-4', '.col-sm-6', '.item', '.entry',
-                'article', 'li'
-            ];
-
-            for (const selector of commonElements) {
-                const count = $(selector).length;
-                if (count > 0) {
-                    console.log(`Found ${count} elements matching '${selector}'`);
-                    console.log(`First element text: ${$(selector).first().text().substring(0, 100)}...`);
-                }
-            }
-        }
-
         // Use similar parsing logic as in the Cheerio function
-        $(selectors.eventContainer).each((index: number, element: cheerio.Element) => {
+        $(selectors.eventContainer).each((index, element) => {
             try {
                 const title = cleanText($(element).find(selectors.title).first().text());
                 const dateText = cleanText($(element).find(selectors.date).first().text());
@@ -733,34 +425,45 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
                 const relativeUrl = $(element).find(selectors.url).attr('href') || '';
                 const imageUrl = $(element).find(selectors.image).attr('src') || undefined;
 
-                console.log(`Processing event ${index}: ${title}`);
+                console.log(`Processing event ${index}: ${title.substring(0, 30)}...`);
                 console.log(`  Date text: ${dateText}`);
 
                 // Process the date using our enhanced date extraction function
-                const date = extractDateFromText(dateText || title); // Try to extract from title if dateText is empty
+                const date = extractDateFromText(dateText);
                 console.log(`  Extracted date: ${date}`);
 
                 // Generate ID
                 const id = `event-${index}-${Date.now()}`;
 
-                // Check if we have enough info to add this event
-                const hasDate = date && date !== dateText && date !== title;
+                // Only add if we have at least a title and some date information
+                if (title && (dateText || title.includes('-'))) {
+                    // For BigCartel, try to extract date from title if dateText is empty or just a price
+                    let finalDate = date;
+                    if (url.includes('bigcartel') && (!dateText || dateText.startsWith('$'))) {
+                        const dashIndex = title.lastIndexOf('-');
+                        if (dashIndex > 0) {
+                            const possibleDate = extractDateFromText(title.substring(dashIndex + 1));
+                            if (possibleDate !== title.substring(dashIndex + 1)) {
+                                finalDate = possibleDate;
+                                console.log(`  Extracted date from title: ${finalDate}`);
+                            }
+                        }
+                    }
 
-                if (title && (hasDate || dateText)) {
                     // Add to events array
                     events.push({
                         id,
                         title,
-                        date: hasDate ? date : dateText,
+                        date: finalDate,
                         description,
                         url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
                         venue: selectors.venue,
                         imageUrl: imageUrl ? new URL(imageUrl, url).toString() : undefined,
                     });
 
-                    console.log(`  Added event: ${title}`);
+                    console.log(`  Added event: ${title.substring(0, 30)}...`);
                 } else {
-                    console.log(`  Skipped event ${index}: Insufficient data (title: ${Boolean(title)}, date: ${hasDate || Boolean(dateText)})`);
+                    console.log(`  Skipped event ${index}: Insufficient data (title: ${Boolean(title)}, date: ${Boolean(dateText)})`);
                 }
             } catch (eventError) {
                 console.warn(`Error parsing event at index ${index}:`, eventError);
@@ -779,26 +482,4 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
             console.log('Puppeteer browser closed');
         }
     }
-}
-
-/**
- * Auto-scroll function to load lazy-loaded content
- */
-async function autoScroll(page: puppeteer.Page): Promise<void> {
-    await page.evaluate(async () => {
-        await new Promise<void>((resolve) => {
-            let totalHeight = 0;
-            const distance = 100;
-            const timer = setInterval(() => {
-                const scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-
-                if (totalHeight >= scrollHeight) {
-                    clearInterval(timer);
-                    resolve();
-                }
-            }, 100);
-        });
-    });
 }

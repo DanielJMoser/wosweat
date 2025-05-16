@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, RefCallback } from 'react';
 import {
     IonContent,
     IonHeader,
@@ -20,6 +20,7 @@ import {
     RefresherEventDetail,
     IonLoading,
     IonIcon,
+    IonText,
     IonRow,
     IonCol,
     IonGrid,
@@ -153,6 +154,14 @@ const EventsPage: React.FC = () => {
         }
     };
 
+    // Create a ref callback function with proper TypeScript types
+    const createRefCallback = (dayId: string): RefCallback<HTMLDivElement> => {
+        return (element) => {
+            daySectionRefs.current[dayId] = element;
+            return undefined; // Fixed: Return void, not HTMLDivElement | null
+        };
+    };
+
     // Scroll to a day section
     const scrollToDay = (dayId: string) => {
         setActiveDayId(dayId);
@@ -212,7 +221,7 @@ const EventsPage: React.FC = () => {
 
             <IonHeader>
                 <IonToolbar className="custom-toolbar">
-                    <IonTitle className="custom-title">Wos Weat (alpha 1.1.0)</IonTitle>
+                    <IonTitle className="custom-title">wosWeat 2.0</IonTitle>
                     <IonButton
                         slot="end"
                         className="update-button"
@@ -339,7 +348,7 @@ const EventsPage: React.FC = () => {
                                 <div
                                     key={day}
                                     className="day-section"
-                                    ref={el => (daySectionRefs.current[day] = el)}
+                                    ref={createRefCallback(day)}
                                     id={`day-${day}`}
                                 >
                                     <div className="day-header">

@@ -77,7 +77,8 @@ export const handler: Handler = async (event) => {
         // Attempt to scrape events from the target sites
         const targetSites = [
             'https://www.treibhaus.at/programm',
-            'https://pmk.or.at/termine'
+            'https://pmk.or.at/termine',
+            'https://artilleryproductions.bigcartel.com/'
         ];
 
         const useJsRendering = event.queryStringParameters?.js === 'true';

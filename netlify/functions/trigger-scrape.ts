@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { scrapeEvents, storeEvents } from './utils/scraper-utils';
-import {EventData} from "../../shared/types/events";
+import { EventData } from "../../shared/types/events";
 
 export const handler: Handler = async (event) => {
     // Set CORS headers
@@ -36,7 +36,10 @@ export const handler: Handler = async (event) => {
         // Get the target sites to scrape
         const targetSites = [
             'https://www.treibhaus.at/programm',
-            'https://pmk.or.at/termine'
+            'https://pmk.or.at/termine',
+            'https://artilleryproductions.bigcartel.com/',
+            'https://www.music-hall.at/veranstaltungen/',
+            'https://diebaeckerei.at/programm/'
         ];
 
         // Use a custom URL if provided

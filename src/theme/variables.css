@@ -1,2 +1,98 @@
 /* For information on how to create your own theme, please see:
 http://ionicframework.com/docs/theming/ */
+
+:root {
+    /* Catppuccin Mocha Color Palette */
+    --ion-color-primary: #cba6f7; /* Mauve */
+    --ion-color-primary-rgb: 203, 166, 247;
+    --ion-color-primary-contrast: #11111b; /* Crust */
+    --ion-color-primary-contrast-rgb: 17, 17, 27;
+    --ion-color-primary-shade: #b394d9;
+    --ion-color-primary-tint: #d0b0f8;
+
+    --ion-color-secondary: #89b4fa; /* Blue */
+    --ion-color-secondary-rgb: 137, 180, 250;
+    --ion-color-secondary-contrast: #11111b; /* Crust */
+    --ion-color-secondary-contrast-rgb: 17, 17, 27;
+    --ion-color-secondary-shade: #799edc;
+    --ion-color-secondary-tint: #95bcfb;
+
+    --ion-color-tertiary: #f5c2e7; /* Pink */
+    --ion-color-tertiary-rgb: 245, 194, 231;
+    --ion-color-tertiary-contrast: #11111b; /* Crust */
+    --ion-color-tertiary-contrast-rgb: 17, 17, 27;
+    --ion-color-tertiary-shade: #d8abcb;
+    --ion-color-tertiary-tint: #f6c8e9;
+
+    --ion-color-success: #a6e3a1; /* Green */
+    --ion-color-success-rgb: 166, 227, 161;
+    --ion-color-success-contrast: #11111b; /* Crust */
+    --ion-color-success-contrast-rgb: 17, 17, 27;
+    --ion-color-success-shade: #92c88e;
+    --ion-color-success-tint: #afe6aa;
+
+    --ion-color-warning: #f9e2af; /* Yellow */
+    --ion-color-warning-rgb: 249, 226, 175;
+    --ion-color-warning-contrast: #11111b; /* Crust */
+    --ion-color-warning-contrast-rgb: 17, 17, 27;
+    --ion-color-warning-shade: #dbc79a;
+    --ion-color-warning-tint: #fae5b7;
+
+    --ion-color-danger: #f38ba8; /* Red */
+    --ion-color-danger-rgb: 243, 139, 168;
+    --ion-color-danger-contrast: #11111b; /* Crust */
+    --ion-color-danger-contrast-rgb: 17, 17, 27;
+    --ion-color-danger-shade: #d67a94;
+    --ion-color-danger-tint: #f497b1;
+
+    --ion-color-dark: #1e1e2e; /* Base */
+    --ion-color-dark-rgb: 30, 30, 46;
+    --ion-color-dark-contrast: #cdd6f4; /* Text */
+    --ion-color-dark-contrast-rgb: 205, 214, 244;
+    --ion-color-dark-shade: #1a1a28;
+    --ion-color-dark-tint: #353543;
+
+    --ion-color-medium: #7f849c; /* Overlay1 */
+    --ion-color-medium-rgb: 127, 132, 156;
+    --ion-color-medium-contrast: #cdd6f4; /* Text */
+    --ion-color-medium-contrast-rgb: 205, 214, 244;
+    --ion-color-medium-shade: #707489;
+    --ion-color-medium-tint: #8c90a6;
+
+    --ion-color-light: #cdd6f4; /* Text */
+    --ion-color-light-rgb: 205, 214, 244;
+    --ion-color-light-contrast: #1e1e2e; /* Base */
+    --ion-color-light-contrast-rgb: 30, 30, 46;
+    --ion-color-light-shade: #b4bbd7;
+    --ion-color-light-tint: #d2daf5;
+
+    /* Additional Catppuccin Colors for custom use */
+    --ion-color-crust: #11111b;
+    --ion-color-mantle: #181825;
+    --ion-color-surface0: #313244;
+    --ion-color-surface1: #45475a;
+    --ion-color-surface2: #585b70;
+    --ion-color-overlay0: #6c7086;
+    --ion-color-overlay2: #9399b2;
+    --ion-color-subtext0: #a6adc8;
+    --ion-color-subtext1: #bac2de;
+    --ion-color-lavender: #b4befe;
+    --ion-color-sapphire: #74c7ec;
+    --ion-color-sky: #89dceb;
+    --ion-color-teal: #94e2d5;
+    --ion-color-peach: #fab387;
+    --ion-color-maroon: #eba0ac;
+    --ion-color-flamingo: #f2cdcd;
+    --ion-color-rosewater: #f5e0dc;
+
+    /* Dark mode for the app */
+    --ion-background-color: var(--ion-color-crust);
+    --ion-background-color-rgb: 17, 17, 27;
+    --ion-text-color: var(--ion-color-light);
+    --ion-text-color-rgb: 205, 214, 244;
+
+    --ion-item-background: var(--ion-color-mantle);
+    --ion-toolbar-background: var(--ion-color-mantle);
+    --ion-tab-bar-background: var(--ion-color-mantle);
+    --ion-card-background: var(--ion-color-mantle);
+}

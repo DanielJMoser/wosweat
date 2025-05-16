@@ -24,7 +24,7 @@ import {
 } from '@ionic/react';
 import { calendar, location, refresh, bug } from 'ionicons/icons';
 import { EventData } from '../../shared/types/events';
-import './EventsPage.css';
+import './EventsPage.scss';
 
 const DirectEventsPage: React.FC = () => {
     const [events, setEvents] = useState<EventData[]>([]);

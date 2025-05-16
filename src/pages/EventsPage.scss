@@ -1,0 +1,540 @@
+/* EventsPage.scss */
+@import '../theme/variables.css';
+
+// Grid and background variables
+$grid-size: 50px;
+$grid-color: rgba(203, 166, 247, 0.1); // Mauve with low opacity
+$grid-accent: rgba(245, 194, 231, 0.12); // Pink with low opacity
+$horizon-color-1: rgba(137, 180, 250, 0.5); // Blue
+$horizon-color-2: rgba(203, 166, 247, 0.5); // Mauve
+$horizon-color-3: rgba(243, 139, 168, 0.5); // Red
+
+// Mixin for neon text effect
+@mixin neon-text($color) {
+    color: $color;
+    text-shadow: 0 0 10px rgba($color, 0.7);
+}
+
+// Background patterns & components
+.events-container {
+    padding: 16px;
+    min-height: 100%;
+    position: relative;
+    background-color: var(--ion-color-crust);
+
+    // Main background
+    &::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -2;
+        background:
+                linear-gradient(0deg,
+                        var(--ion-color-crust) 0%,
+                        var(--ion-color-mantle) 80%,
+                        var(--ion-color-surface0) 100%);
+    }
+
+    // Grid background
+    &::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+        opacity: 0.7;
+        background-image:
+                linear-gradient(to bottom, transparent 0%, transparent 60%, $grid-accent 100%),
+                linear-gradient(to right, $grid-color 1px, transparent 1px),
+                linear-gradient(to bottom, $grid-color 1px, transparent 1px);
+        background-size: 100% 100%, $grid-size $grid-size, $grid-size $grid-size;
+        transform-origin: center bottom;
+        transform: perspective(500px) rotateX(30deg);
+        pointer-events: none;
+    }
+}
+
+// Vaporwave sun
+.vaporwave-sun {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(
+                    ellipse at center bottom,
+                    rgba(245, 194, 231, 0.6) 0%,
+                    rgba(243, 139, 168, 0.4) 40%,
+                    rgba(203, 166, 247, 0.2) 60%,
+                    rgba(17, 17, 27, 0) 80%
+    );
+    z-index: -1;
+    pointer-events: none;
+}
+
+// Horizontal lines (horizon)
+.horizon-lines {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    z-index: -1;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 20px,
+                    $horizon-color-1 20px,
+                    $horizon-color-1 21px,
+                    transparent 21px,
+                    transparent 40px,
+                    $horizon-color-2 40px,
+                    $horizon-color-2 41px,
+                    transparent 41px,
+                    transparent 60px,
+                    $horizon-color-3 60px,
+                    $horizon-color-3 61px,
+                    transparent 61px,
+                    transparent 80px
+    );
+    opacity: 0.15;
+    mix-blend-mode: screen;
+}
+
+// Stars
+.stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+
+    &::before, &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+                radial-gradient(1px 1px at 10px 10px, var(--ion-color-light) 50%, transparent 100%),
+                radial-gradient(1px 1px at 20px 50px, var(--ion-color-light) 50%, transparent 100%),
+                radial-gradient(1px 1px at 30px 100px, var(--ion-color-subtext0) 50%, transparent 100%),
+                radial-gradient(1px 1px at 40px 30px, var(--ion-color-subtext1) 50%, transparent 100%),
+                radial-gradient(2px 2px at 60px 200px, var(--ion-color-light) 50%, transparent 100%),
+                radial-gradient(2px 2px at 100px 100px, var(--ion-color-subtext0) 50%, transparent 100%),
+                radial-gradient(1px 1px at 150px 50px, var(--ion-color-light) 50%, transparent 100%),
+                radial-gradient(1px 1px at 200px 150px, var(--ion-color-subtext1) 50%, transparent 100%);
+        background-repeat: repeat;
+        background-size: 250px 250px;
+        opacity: 0.3;
+        animation: glimmer 120s linear infinite;
+    }
+
+    &::after {
+        background-size: 200px 200px;
+        animation-direction: reverse;
+        animation-duration: 180s;
+    }
+}
+
+@keyframes glimmer {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-250px);
+    }
+}
+
+// Retro grid layout
+.events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 16px;
+    position: relative;
+}
+
+// Day section styling
+.day-section {
+    margin-bottom: 32px;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -15px;
+        left: -15px;
+        width: 30px;
+        height: 30px;
+        border-top: 2px solid var(--ion-color-mauve);
+        border-left: 2px solid var(--ion-color-mauve);
+        opacity: 0.7;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        right: -15px;
+        width: 30px;
+        height: 30px;
+        border-bottom: 2px solid var(--ion-color-pink);
+        border-right: 2px solid var(--ion-color-pink);
+        opacity: 0.7;
+    }
+}
+
+.day-header {
+    position: relative;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    font-family: "Orbitron", "Courier New", monospace;
+    text-transform: uppercase;
+    @include neon-text(var(--ion-color-mauve));
+    border-bottom: 2px solid var(--ion-color-surface1);
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, var(--ion-color-mauve), transparent);
+    }
+}
+
+.day-date {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.day-name {
+    font-size: 1rem;
+    color: var(--ion-color-subtext1);
+}
+
+// Event card styling
+.event-card {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--ion-color-mantle);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--ion-color-surface0);
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(203, 166, 247, 0.2);
+        border: 1px solid var(--ion-color-mauve);
+
+        &::before {
+            opacity: 1;
+        }
+
+        .event-image {
+            transform: scale(1.05);
+        }
+    }
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--ion-color-mauve), var(--ion-color-pink), var(--ion-color-blue));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+}
+
+.event-image-container {
+    position: relative;
+    overflow: hidden;
+    height: 160px;
+}
+
+.event-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    filter: saturate(120%);
+}
+
+// Event info styling
+.event-card-header {
+    padding: 16px 16px 8px;
+}
+
+.event-card-title {
+    font-family: "Orbitron", "Courier New", monospace;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    color: var(--ion-color-light);
+    text-shadow: 0 0 5px rgba(205, 214, 244, 0.3);
+}
+
+.event-card-subtitle {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--ion-color-subtext0);
+    margin-bottom: 8px;
+
+    ion-icon {
+        margin-right: 6px;
+        color: var(--ion-color-pink);
+    }
+
+    span + span {
+        margin-left: 12px;
+    }
+}
+
+.event-card-content {
+    padding: 0 16px 16px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-description {
+    color: var(--ion-color-subtext1);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 16px;
+    flex-grow: 1;
+}
+
+.event-link {
+    align-self: flex-start;
+    color: var(--ion-color-mauve);
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+
+    ion-icon {
+        margin-right: 6px;
+    }
+
+    &:hover {
+        color: var(--ion-color-pink);
+    }
+}
+
+// Loading skeleton styling
+.skeleton-card {
+    background-color: var(--ion-color-mantle);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--ion-color-surface0);
+}
+
+ion-skeleton-text {
+    --background-rgb: 127, 132, 156;
+    opacity: 0.3;
+}
+
+// Search bar styling
+.search-container {
+    padding: 16px;
+    background-color: var(--ion-color-mantle);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.custom-searchbar {
+    --background: var(--ion-color-surface0);
+    --color: var(--ion-color-light);
+    --placeholder-color: var(--ion-color-subtext0);
+    --icon-color: var(--ion-color-subtext0);
+    --clear-button-color: var(--ion-color-subtext0);
+    --border-radius: 8px;
+    --box-shadow: none;
+}
+
+// Toolbar styling
+.custom-toolbar {
+    --background: var(--ion-color-mantle);
+    --color: var(--ion-color-light);
+    border-bottom: 1px solid var(--ion-color-surface0);
+}
+
+.custom-title {
+    font-family: "Orbitron", "Courier New", monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: linear-gradient(to right, var(--ion-color-mauve), var(--ion-color-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+}
+
+// Update button
+.update-button {
+    --background: var(--ion-color-surface0);
+    --background-activated: var(--ion-color-surface1);
+    --background-hover: var(--ion-color-surface1);
+    --color: var(--ion-color-mauve);
+    --border-radius: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 8px;
+}
+
+// Debug button
+.debug-button {
+    --background: var(--ion-color-surface0);
+    --background-activated: var(--ion-color-surface1);
+    --background-hover: var(--ion-color-surface1);
+    --color: var(--ion-color-overlay2);
+    --border-radius: 8px;
+}
+
+// Loading state
+.loading-container {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.neon-text {
+    @include neon-text(var(--ion-color-mauve));
+    font-family: "Orbitron", "Courier New", monospace;
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+}
+
+// No events state
+.no-events-container {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 300px;
+}
+
+.retry-button {
+    --background: var(--ion-color-surface0);
+    --background-activated: var(--ion-color-surface1);
+    --background-hover: var(--ion-color-surface1);
+    --color: var(--ion-color-mauve);
+    --border-radius: 8px;
+    margin-top: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+// Footer styling
+.custom-footer {
+    --background: var(--ion-color-mantle);
+    border-top: 1px solid var(--ion-color-surface0);
+    padding: 8px 0;
+    color: var(--ion-color-subtext0);
+    font-size: 0.8rem;
+}
+
+// Debug info
+.debug-info {
+    padding: 8px;
+    background: rgba(17, 17, 27, 0.7);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: var(--ion-color-subtext0);
+}
+
+// Day navigation
+.day-nav {
+    position: sticky;
+    top: 0;
+    background-color: var(--ion-color-mantle);
+    z-index: 100;
+    padding: 8px 16px;
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--ion-color-surface0);
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.day-nav-item {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: var(--ion-color-surface0);
+    color: var(--ion-color-subtext0);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.active {
+        background-color: var(--ion-color-primary);
+        color: var(--ion-color-primary-contrast);
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .events-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .day-date {
+        font-size: 1.5rem;
+    }
+
+    .event-card-title {
+        font-size: 1.1rem;
+    }
+
+    .event-card-subtitle {
+        flex-direction: column;
+        align-items: flex-start;
+
+        span + span {
+            margin-top: 4px;
+            margin-left: 0 !important;
+        }
+    }
+}

@@ -10,8 +10,10 @@ export const handler = schedule('0 0 * * *', async () => {
         // Define the websites to scrape
         const targetSites = [
             'https://www.treibhaus.at/programm',
-            'https://pmk.or.at/termine'
-            // Add more event sites here
+            'https://pmk.or.at/termine',
+            'https://artilleryproductions.bigcartel.com/',
+            'https://www.music-hall.at/veranstaltungen/',
+            'https://diebaeckerei.at/programm/'
         ];
 
         // Scrape each site
@@ -23,12 +25,9 @@ export const handler = schedule('0 0 * * *', async () => {
         // Process sites in parallel for better performance
         const scrapePromises = targetSites.map(async (site) => {
             try {
-                // Determine if the site needs JavaScript rendering
-                // This could be a configuration in a database or a predefined mapping
-                const needsJsRendering = site.includes('javascript-heavy-site.com');
-
-                // Scrape the site
-                const events = await scrapeEvents(site, needsJsRendering);
+                // Determine if the site needs JavaScript rendering from the scrapeEvents function
+                // The function will handle this internally now based on the site URL
+                const events = await scrapeEvents(site);
                 console.log(`Scraped ${events.length} events from ${site}`);
                 return events;
             } catch (error) {

@@ -13,16 +13,7 @@ export async function scrapeEvents(url: string, useJsRendering = false): Promise
     try {
         let events: EventData[];
 
-        // Force JavaScript rendering for sites that require it
-        const jsRenderingSites = [
-            'music-hall.at',
-            'diebaeckerei.at'
-        ];
-
-        // Check if the current URL is in the jsRenderingSites array
-        const needsJsRendering = useJsRendering || jsRenderingSites.some(site => url.includes(site));
-
-        if (needsJsRendering) {
+        if (useJsRendering) {
             events = await scrapeWithPuppeteer(url);
         } else {
             events = await scrapeWithCheerio(url);
@@ -118,36 +109,6 @@ function getSelectorsForSite(url: string) {
             image: 'img',
             venue: 'PMK Innsbruck'
         };
-    } else if (url.includes('artilleryproductions.bigcartel.com')) {
-        return {
-            eventContainer: '.product-list-item, .product, li',
-            title: '.product-title, h2, .title',
-            date: '.product-price, .date-info, .date', // Note: BigCartel might include date in title or description
-            description: '.product-description, .description, p',
-            url: 'a',
-            image: '.product-image img, img',
-            venue: 'Artillery Productions'
-        };
-    } else if (url.includes('music-hall.at')) {
-        return {
-            eventContainer: '.event-item, .dhvc-event, li.event, .event, .col-md-12',
-            title: '.event-title, h3, .title',
-            date: '.event-date, .date, time, .event-start-date',
-            description: '.event-content, .description, .excerpt, p',
-            url: 'a',
-            image: '.event-image img, img',
-            venue: 'Music Hall Innsbruck'
-        };
-    } else if (url.includes('diebaeckerei.at')) {
-        return {
-            eventContainer: '.event, .veranstaltung, article, .blog-post',
-            title: '.title, h1, h2, h3, .post-title',
-            date: '.date, time, .post-date, .event-date',
-            description: '.content, .post-content, .description, p',
-            url: 'a',
-            image: 'img',
-            venue: 'Die Bäckerei'
-        };
     }
 
     // Default selectors for unknown sites (more generic)
@@ -160,75 +121,6 @@ function getSelectorsForSite(url: string) {
         image: 'img',
         venue: 'Unknown Venue'
     };
-}
-
-/**
- * Extract and normalize date information from various formats
- */
-function extractDateFromText(dateText: string): string {
-    console.log(`Attempting to extract date from: "${dateText}"`);
-
-    // Clean the date text
-    const cleanDateText = dateText.trim().replace(/\s+/g, ' ');
-
-    // Try German format: DD.MM.YYYY
-    const germanDateMatch = cleanDateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
-    if (germanDateMatch) {
-        const [_, day, month, year = new Date().getFullYear()] = germanDateMatch;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-
-    // Try abbreviated day format: Do. DD.MM.YYYY
-    const abbrevDayMatch = cleanDateText.match(/([A-Za-zäöüÄÖÜ]{2})\.\s*(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
-    if (abbrevDayMatch) {
-        const [_, _day, day, month, year = new Date().getFullYear()] = abbrevDayMatch;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-
-    // Try common date formats: DD. Month YYYY or DD.MM.
-    // First, check for month names in German or English
-    const monthNames = {
-        'januar': '01', 'januar': '01', 'jänner': '01', 'january': '01', 'jan': '01',
-        'februar': '02', 'february': '02', 'feb': '02',
-        'märz': '03', 'march': '03', 'mar': '03',
-        'april': '04', 'apr': '04',
-        'mai': '05', 'may': '05',
-        'juni': '06', 'june': '06', 'jun': '06',
-        'juli': '07', 'july': '07', 'jul': '07',
-        'august': '08', 'aug': '08',
-        'september': '09', 'sep': '09', 'sept': '09',
-        'oktober': '10', 'october': '10', 'okt': '10', 'oct': '10',
-        'november': '11', 'nov': '11',
-        'dezember': '12', 'december': '12', 'dez': '12', 'dec': '12'
-    };
-
-    // Check for format: DD. MonthName YYYY
-    const monthNameMatch = cleanDateText.toLowerCase().match(/(\d{1,2})\.?\s+([a-zäöü]+)\.?\s+(\d{4})/);
-    if (monthNameMatch) {
-        const [_, day, monthName, year] = monthNameMatch;
-        const month = monthNames[monthName.toLowerCase()];
-        if (month) {
-            return `${year}-${month}-${day.padStart(2, '0')}`;
-        }
-    }
-
-    // Try to extract date from bigcartel style: typically in a title like "Event Name - 05.16.2025"
-    const bigCartelMatch = cleanDateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-    if (bigCartelMatch) {
-        const [_, month, day, year] = bigCartelMatch;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-
-    // If no match found, return the original text
-    return dateText;
-}
-
-/**
- * Clean and normalize text content
- */
-function cleanText(text: string): string {
-    if (!text) return '';
-    return text.replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -266,45 +158,45 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
             console.log(`- Divs with grid classes: ${$('.col-md-4, .col-sm-6, .col-lg-3').length}`);
         }
 
+        // Example selectors for treibhaus.at - adjust based on the target website's structure
         $(selectors.eventContainer).each((index, element) => {
             try {
                 // Extract event details using Cheerio selectors
-                const title = cleanText($(element).find(selectors.title).first().text());
-                const dateText = cleanText($(element).find(selectors.date).first().text());
-                const description = cleanText($(element).find(selectors.description).text());
+                const title = $(element).find(selectors.title).first().text().trim();
+                const dateText = $(element).find(selectors.date).first().text().trim();
+                const description = $(element).find(selectors.description).text().trim();
                 const relativeUrl = $(element).find(selectors.url).attr('href') || '';
                 const imageUrl = $(element).find(selectors.image).attr('src') || undefined;
 
                 console.log(`Processing event ${index}: ${title.substring(0, 30)}...`);
                 console.log(`  Date text: ${dateText}`);
 
-                // Process the date using our enhanced date extraction function
-                const date = extractDateFromText(dateText);
-                console.log(`  Extracted date: ${date}`);
+                // Process the date - try multiple formats
+                let date = dateText;
+                // Try German format: DD.MM.YYYY
+                const germanDateMatch = dateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
+                if (germanDateMatch) {
+                    const [_, day, month, year = new Date().getFullYear()] = germanDateMatch;
+                    date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
+
+                // Try abbreviated day format: Do. DD.MM.YYYY
+                const abbrevDayMatch = dateText.match(/([A-Za-zäöüÄÖÜ]{2})\.\s*(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
+                if (abbrevDayMatch) {
+                    const [_, _day, day, month, year = new Date().getFullYear()] = abbrevDayMatch;
+                    date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
 
                 // Generate ID
                 const id = `event-${index}-${Date.now()}`;
 
                 // Only add if we have at least a title and some date information
-                if (title && (dateText || title.includes('-'))) { // Some sites include date in title with a dash
-                    // For BigCartel, try to extract date from title if dateText is empty or just a price
-                    let finalDate = date;
-                    if (url.includes('bigcartel') && (!dateText || dateText.startsWith('$'))) {
-                        const dashIndex = title.lastIndexOf('-');
-                        if (dashIndex > 0) {
-                            const possibleDate = extractDateFromText(title.substring(dashIndex + 1));
-                            if (possibleDate !== title.substring(dashIndex + 1)) {
-                                finalDate = possibleDate;
-                                console.log(`  Extracted date from title: ${finalDate}`);
-                            }
-                        }
-                    }
-
+                if (title && dateText) {
                     // Add to events array
                     events.push({
                         id,
                         title,
-                        date: finalDate,
+                        date,
                         description,
                         url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
                         venue: selectors.venue,
@@ -385,21 +277,6 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
 
         console.log('Page loaded successfully');
 
-        // Wait for dynamic content to load for certain sites
-        if (url.includes('music-hall.at')) {
-            try {
-                await page.waitForSelector('.event-item, .dhvc-event', { timeout: 3000 });
-            } catch (e) {
-                console.log('Timeout waiting for event elements, proceeding anyway');
-            }
-        } else if (url.includes('diebaeckerei.at')) {
-            try {
-                await page.waitForSelector('.event, .veranstaltung, article, .blog-post', { timeout: 3000 });
-            } catch (e) {
-                console.log('Timeout waiting for event elements, proceeding anyway');
-            }
-        }
-
         // Get the page content and use Cheerio to parse it (more efficient than page.evaluate)
         const content = await page.content();
         console.log(`Received page content (${content.length} bytes)`);
@@ -416,45 +293,37 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
         const containerCount = $(selectors.eventContainer).length;
         console.log(`Found ${containerCount} potential event containers`);
 
-        // Use similar parsing logic as in the Cheerio function
+        // Use the same parsing logic as in the Cheerio function
         $(selectors.eventContainer).each((index, element) => {
             try {
-                const title = cleanText($(element).find(selectors.title).first().text());
-                const dateText = cleanText($(element).find(selectors.date).first().text());
-                const description = cleanText($(element).find(selectors.description).text());
+                const title = $(element).find(selectors.title).first().text().trim();
+                const dateText = $(element).find(selectors.date).first().text().trim();
+                const description = $(element).find(selectors.description).text().trim();
                 const relativeUrl = $(element).find(selectors.url).attr('href') || '';
                 const imageUrl = $(element).find(selectors.image).attr('src') || undefined;
 
                 console.log(`Processing event ${index}: ${title.substring(0, 30)}...`);
                 console.log(`  Date text: ${dateText}`);
 
-                // Process the date using our enhanced date extraction function
-                const date = extractDateFromText(dateText);
-                console.log(`  Extracted date: ${date}`);
+                // Process the date - try multiple formats
+                let date = dateText;
+                // Try German format: DD.MM.YYYY
+                const germanDateMatch = dateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
+                if (germanDateMatch) {
+                    const [_, day, month, year = new Date().getFullYear()] = germanDateMatch;
+                    date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
 
                 // Generate ID
                 const id = `event-${index}-${Date.now()}`;
 
                 // Only add if we have at least a title and some date information
-                if (title && (dateText || title.includes('-'))) {
-                    // For BigCartel, try to extract date from title if dateText is empty or just a price
-                    let finalDate = date;
-                    if (url.includes('bigcartel') && (!dateText || dateText.startsWith('$'))) {
-                        const dashIndex = title.lastIndexOf('-');
-                        if (dashIndex > 0) {
-                            const possibleDate = extractDateFromText(title.substring(dashIndex + 1));
-                            if (possibleDate !== title.substring(dashIndex + 1)) {
-                                finalDate = possibleDate;
-                                console.log(`  Extracted date from title: ${finalDate}`);
-                            }
-                        }
-                    }
-
+                if (title && dateText) {
                     // Add to events array
                     events.push({
                         id,
                         title,
-                        date: finalDate,
+                        date,
                         description,
                         url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
                         venue: selectors.venue,

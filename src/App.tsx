@@ -10,6 +10,7 @@ import { IonReactRouter } from '@ionic/react-router';
 // Import your pages
 import EventsPage from './pages/EventsPage';
 import DirectEventsPage from './pages/DirectEventsPage';
+import TestNightSky from './pages/TestNightSky';
 // Import other pages as needed
 
 /* Import the EventsProvider */
@@ -47,6 +48,9 @@ const App: React.FC = () => (
             </Route>
             <Route exact path="/direct">
               <DirectEventsPage />
+            </Route>
+            <Route exact path="/nightsky">
+              <TestNightSky />
             </Route>
             {/* Add other routes as needed */}
 

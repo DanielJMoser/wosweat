@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { useMousePosition } from '../../hooks/useMousePosition';
 import { AnimationConfig } from '../../types/ui';
+import { AstronomyService } from '../../services/AstronomyService';
+import { Star, Constellation } from '../../data/starCatalog';
 import './AnimatedMesh.scss';
 
 interface AnimatedMeshProps {
@@ -26,6 +28,8 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
   const linesRef = useRef<SVGLineElement[]>([]);
   const gravityWellsRef = useRef<Array<{x: number, y: number, strength: number, id: string}>>([]);
   const physicsAnimationRef = useRef<number | null>(null);
+  const [stars, setStars] = useState<Star[]>([]);
+  const [constellations, setConstellations] = useState<Constellation[]>([]);
 
   // Default configuration with user overrides
   const meshConfig: AnimationConfig = {
@@ -35,19 +39,48 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
     mouseInfluence: 0.2,
     gravityStrength: 300, // Enhanced gravity well strength
     maxGravityDistance: 350, // Increased maximum distance for gravity effect
+    mode: 'abstract', // Default to abstract mode
+    showConstellationLines: true,
+    showConstellationLabels: false,
+    magnitudeLimit: 4.0,
     ...config
   };
 
+  // Convert astronomical coordinates to screen coordinates
+  const astronomicalToScreen = useCallback((azimuth: number, altitude: number) => {
+    const containerWidth = window.innerWidth;
+    const containerHeight = window.innerHeight;
+    return AstronomyService.astronomicalToScreen(azimuth, altitude, containerWidth, containerHeight);
+  }, []);
+
+  // Real-time star position updates (nightsky mode)
+  useEffect(() => {
+    if (meshConfig.mode !== 'nightsky') return;
+
+    const updateStarPositions = () => {
+      const currentStars = AstronomyService.calculateStarPositions(new Date())
+        .filter(star => star.magnitude <= (meshConfig.magnitudeLimit || 4.0));
+      setStars(currentStars);
+      
+      const visibleConstellations = AstronomyService.getVisibleConstellations(currentStars);
+      setConstellations(visibleConstellations);
+      
+      console.log(`Night sky updated: ${currentStars.filter(s => s.visible).length} visible stars`);
+    };
+
+    updateStarPositions();
+    const interval = setInterval(updateStarPositions, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [meshConfig.mode, meshConfig.magnitudeLimit]);
+
   // Initialize mesh points
   useEffect(() => {
-    console.log('Initializing AnimatedMesh...');
+    console.log(`Initializing AnimatedMesh in ${meshConfig.mode} mode...`);
     
     if (!containerRef.current || isInitialized) return;
 
     const container = containerRef.current;
-    const { particleCount } = meshConfig;
-
-    console.log(`Creating ${particleCount} mesh points`);
 
     // Clear existing content
     container.innerHTML = '';
@@ -62,7 +95,7 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
 
     // Create SVG for lines first (so it's behind points)
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'mesh-lines');
+    svg.setAttribute('class', meshConfig.mode === 'nightsky' ? 'constellation-lines' : 'mesh-lines');
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
     svg.style.cssText = `
@@ -79,47 +112,117 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
     
     console.log('SVG created and added to container');
 
-    // Create mesh points
-    for (let i = 0; i < particleCount; i++) {
-      const point = document.createElement('div');
-      point.className = 'mesh-point';
-      point.dataset.index = i.toString();
-      
-      // Initial random position
-      const x = Math.random() * (containerWidth - 20) + 10;
-      const y = Math.random() * (containerHeight - 20) + 10;
-      
-      point.style.cssText = `
-        position: absolute;
-        width: 12px;
-        height: 12px;
-        background: radial-gradient(circle, #ff6b9d 0%, #c471ed 50%, #12c2e9 100%);
-        border-radius: 50%;
-        pointer-events: none;
-        transform-origin: center center;
-        left: ${x}px;
-        top: ${y}px;
-        z-index: 1000;
-        box-shadow: 
-          0 0 20px rgba(255, 107, 157, 1),
-          0 0 40px rgba(196, 113, 237, 0.8),
-          0 0 60px rgba(18, 194, 233, 0.6);
-        border: 2px solid rgba(255, 107, 157, 0.8);
-      `;
+    if (meshConfig.mode === 'nightsky') {
+      // Create stars based on astronomical data
+      const visibleStars = stars.filter(star => star.visible);
+      console.log(`Creating ${visibleStars.length} stars`);
 
-      container.appendChild(point);
-      meshPointsRef.current.push(point);
-      
-      console.log(`Created point ${i} at ${x}, ${y}`);
+      visibleStars.forEach((star, index) => {
+        if (!star.azimuth || !star.altitude) return;
+
+        const { x, y } = astronomicalToScreen(star.azimuth, star.altitude);
+        const brightness = AstronomyService.getStarBrightness(star.magnitude);
+        const size = AstronomyService.getStarSize(star.magnitude);
+
+        const point = document.createElement('div');
+        point.className = 'star-point';
+        point.dataset.starId = star.id;
+        point.dataset.constellation = star.constellation;
+        point.dataset.index = index.toString();
+        
+        point.style.cssText = `
+          position: absolute;
+          width: ${size}px;
+          height: ${size}px;
+          background: radial-gradient(circle, 
+            rgba(255, 255, 255, ${brightness}) 0%,
+            rgba(200, 200, 255, ${brightness * 0.8}) 50%,
+            transparent 100%);
+          border-radius: 50%;
+          pointer-events: none;
+          transform-origin: center center;
+          left: ${x - size/2}px;
+          top: ${y - size/2}px;
+          z-index: 1000;
+          box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, ${brightness * 0.6});
+        `;
+
+        container.appendChild(point);
+        meshPointsRef.current.push(point);
+        
+        console.log(`Created star ${star.name} (${star.magnitude}) at ${x}, ${y}`);
+      });
+
+      // Draw constellation lines
+      if (meshConfig.showConstellationLines) {
+        constellations.forEach(constellation => {
+          constellation.connections.forEach(([star1Id, star2Id]) => {
+            const star1 = stars.find(s => s.id === star1Id && s.visible);
+            const star2 = stars.find(s => s.id === star2Id && s.visible);
+            
+            if (!star1?.azimuth || !star1?.altitude || !star2?.azimuth || !star2?.altitude) return;
+
+            const pos1 = astronomicalToScreen(star1.azimuth, star1.altitude);
+            const pos2 = astronomicalToScreen(star2.azimuth, star2.altitude);
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', pos1.x.toString());
+            line.setAttribute('y1', pos1.y.toString());
+            line.setAttribute('x2', pos2.x.toString());
+            line.setAttribute('y2', pos2.y.toString());
+            line.setAttribute('stroke', 'rgba(100, 150, 255, 0.3)');
+            line.setAttribute('stroke-width', '1');
+            line.setAttribute('class', `constellation-line ${constellation.abbreviation}`);
+
+            svg.appendChild(line);
+            linesRef.current.push(line);
+          });
+        });
+      }
+    } else {
+      // Create abstract mesh points (original behavior)
+      const { particleCount } = meshConfig;
+      for (let i = 0; i < particleCount; i++) {
+        const point = document.createElement('div');
+        point.className = 'mesh-point';
+        point.dataset.index = i.toString();
+        
+        // Initial random position
+        const x = Math.random() * (containerWidth - 20) + 10;
+        const y = Math.random() * (containerHeight - 20) + 10;
+        
+        point.style.cssText = `
+          position: absolute;
+          width: 12px;
+          height: 12px;
+          background: radial-gradient(circle, #ff6b9d 0%, #c471ed 50%, #12c2e9 100%);
+          border-radius: 50%;
+          pointer-events: none;
+          transform-origin: center center;
+          left: ${x}px;
+          top: ${y}px;
+          z-index: 1000;
+          box-shadow: 
+            0 0 20px rgba(255, 107, 157, 1),
+            0 0 40px rgba(196, 113, 237, 0.8),
+            0 0 60px rgba(18, 194, 233, 0.6);
+          border: 2px solid rgba(255, 107, 157, 0.8);
+        `;
+
+        container.appendChild(point);
+        meshPointsRef.current.push(point);
+        
+        console.log(`Created point ${i} at ${x}, ${y}`);
+      }
     }
 
     setIsInitialized(true);
     console.log('AnimatedMesh initialization complete');
-  }, [meshConfig.particleCount]);
+  }, [meshConfig.mode, meshConfig.particleCount, meshConfig.showConstellationLines, stars, constellations, astronomicalToScreen]);
 
-  // Create floating animation with GSAP
+  // Create floating animation with GSAP (only in abstract mode)
   useEffect(() => {
-    if (!isInitialized || meshPointsRef.current.length === 0) return;
+    if (!isInitialized || meshPointsRef.current.length === 0 || meshConfig.mode === 'nightsky') return;
 
     console.log('Starting GSAP animations...');
 
@@ -131,7 +234,7 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
     // Create main timeline
     timelineRef.current = gsap.timeline({ repeat: -1 });
     const points = meshPointsRef.current;
-    const { intensity, speed } = meshConfig;
+    const { intensity } = meshConfig;
 
     // Animate each point individually
     points.forEach((point, index) => {
@@ -164,7 +267,7 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
         timelineRef.current.kill();
       }
     };
-  }, [isInitialized, meshConfig.intensity, meshConfig.speed]);
+  }, [isInitialized, meshConfig.mode, meshConfig.intensity]);
 
   // Gravity wells physics system
   useEffect(() => {

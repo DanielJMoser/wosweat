@@ -14,6 +14,10 @@ export interface AnimationConfig {
   mouseInfluence: number;
   gravityStrength?: number;
   maxGravityDistance?: number;
+  mode?: 'abstract' | 'nightsky';
+  showConstellationLines?: boolean;
+  showConstellationLabels?: boolean;
+  magnitudeLimit?: number;
 }
 
 export interface MousePosition {

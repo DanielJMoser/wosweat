@@ -50,9 +50,9 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
     meshPointsRef.current = [];
     linesRef.current = [];
 
-    // Get container dimensions
-    const containerWidth = container.clientWidth || window.innerWidth;
-    const containerHeight = container.clientHeight || window.innerHeight;
+    // Get container dimensions - force viewport dimensions for full coverage
+    const containerWidth = window.innerWidth;
+    const containerHeight = window.innerHeight;
 
     console.log(`Container dimensions: ${containerWidth}x${containerHeight}`);
 
@@ -68,9 +68,12 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 1;
+      z-index: 999;
+      overflow: visible;
     `;
     container.appendChild(svg);
+    
+    console.log('SVG created and added to container');
 
     // Create mesh points
     for (let i = 0; i < particleCount; i++) {
@@ -228,18 +231,22 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
 
         if (distance <= maxDistance) {
           const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          const opacity = (1 - distance / maxDistance) * 0.8;
+          const opacity = Math.max(0.3, (1 - distance / maxDistance) * 0.9);
           
           line.setAttribute('x1', (x1 + 6).toString()); // +6 for point center (12px/2)
           line.setAttribute('y1', (y1 + 6).toString());
           line.setAttribute('x2', (x2 + 6).toString());
           line.setAttribute('y2', (y2 + 6).toString());
           line.setAttribute('stroke', `rgba(255, 107, 157, ${opacity})`);
-          line.setAttribute('stroke-width', '2');
+          line.setAttribute('stroke-width', '3');
+          line.setAttribute('stroke-linecap', 'round');
           line.setAttribute('class', 'mesh-line');
+          line.style.filter = 'drop-shadow(0 0 4px rgba(255, 107, 157, 0.8))';
 
           svg.appendChild(line);
           linesRef.current.push(line);
+          
+          console.log(`Created line from (${x1 + 6}, ${y1 + 6}) to (${x2 + 6}, ${y2 + 6}) with opacity ${opacity}`);
         }
       }
     }
@@ -279,15 +286,17 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
 
           if (distance <= maxDistance) {
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            const opacity = (1 - distance / maxDistance) * 0.4;
+            const opacity = Math.max(0.3, (1 - distance / maxDistance) * 0.9);
             
             line.setAttribute('x1', x1.toString());
             line.setAttribute('y1', y1.toString());
             line.setAttribute('x2', x2.toString());
             line.setAttribute('y2', y2.toString());
             line.setAttribute('stroke', `rgba(255, 107, 157, ${opacity})`);
-            line.setAttribute('stroke-width', '2');
+            line.setAttribute('stroke-width', '3');
+            line.setAttribute('stroke-linecap', 'round');
             line.setAttribute('class', 'mesh-line');
+            line.style.filter = 'drop-shadow(0 0 4px rgba(255, 107, 157, 0.8))';
 
             svg.appendChild(line);
             linesRef.current.push(line);
@@ -333,9 +342,8 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
         left: 0,
         width: '100vw',
         height: '100vh',
-        zIndex: 100,
+        zIndex: 1,
         pointerEvents: 'none',
-        background: 'transparent'
       }}
     />
   );

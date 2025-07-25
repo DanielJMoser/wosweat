@@ -10,17 +10,14 @@ import {
     IonButton,
     IonToast,
     IonSkeletonText,
-    IonCard,
     IonCardHeader,
     IonCardTitle,
     IonCardSubtitle,
     IonCardContent,
-    IonFooter,
     IonSearchbar,
     RefresherEventDetail,
     IonLoading,
     IonIcon,
-    IonText,
     IonRow,
     IonCol,
     IonGrid,
@@ -32,6 +29,7 @@ import { EventData } from '../../shared/types/events';
 import { useDebugMode } from '../hooks/useDebugMode';
 import { DebugPanel } from '../components/DebugPanel';
 import { AnimatedMesh } from '../components/AnimatedMesh';
+import { GlassCard } from '../components/GlassCard/GlassCard';
 import { DebugInfo } from '../types/ui';
 import './EventsPage.scss';
 
@@ -47,7 +45,7 @@ const formatDate = (dateString: string): string => {
             month: 'long',
             day: 'numeric',
         }).format(date);
-    } catch (e) {
+    } catch {
         return dateString;
     }
 };
@@ -228,15 +226,23 @@ const EventsPage: React.FC = () => {
 
     return (
         <IonPage>
-            {/* Animated Mesh Background */}
-            <AnimatedMesh config={{ particleCount: 12, intensity: 0.4 }} />
-            
-            {/* Vaporwave background elements */}
-            <div className="stars"></div>
-            <div className="horizon-lines"></div>
-            <div className="vaporwave-sun"></div>
+            {/* Background Layer Container */}
+            <div className="background-layer">
+                {/* Animated Mesh Background - Enhanced for glassmorphism */}
+                <AnimatedMesh config={{ particleCount: 15, intensity: 0.6, speed: 1.5 }} />
+                
+                {/* Vaporwave background elements */}
+                <div className="stars"></div>
+                <div className="horizon-lines"></div>
+{/*
+                <div className="vaporwave-sun"></div>
+*/}
 
-            <IonHeader>
+                {/* Additional glassmorphism enhancement overlay */}
+                <div className="glass-enhancement-overlay"></div>
+            </div>
+
+            <IonHeader style={{ position: 'relative', zIndex: 100 }}>
                 <IonToolbar className="custom-toolbar">
                     <IonTitle className="custom-title">wosWeat 2.0</IonTitle>
                     <IonButton
@@ -251,7 +257,7 @@ const EventsPage: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent>
+            <IonContent className="transparent-content" style={{ position: 'relative', zIndex: 50 }}>
                 {/* Pull-to-refresh */}
                 <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
                     <IonRefresherContent></IonRefresherContent>
@@ -318,7 +324,7 @@ const EventsPage: React.FC = () => {
                     {state.loading && (
                         <div className="events-grid">
                             {Array.from({ length: 3 }).map((_, i) => (
-                                <IonCard key={i} className="skeleton-card">
+                                <GlassCard key={i} className="skeleton-card" variant="secondary">
                                     <div style={{ height: '160px' }}>
                                         <IonSkeletonText animated style={{ width: '100%', height: '100%' }} />
                                     </div>
@@ -331,7 +337,7 @@ const EventsPage: React.FC = () => {
                                         <IonSkeletonText animated style={{ width: '80%' }} />
                                         <IonSkeletonText animated style={{ width: '60%' }} />
                                     </IonCardContent>
-                                </IonCard>
+                                </GlassCard>
                             ))}
                         </div>
                     )}
@@ -380,7 +386,7 @@ const EventsPage: React.FC = () => {
 
                                     <div className="events-grid">
                                         {eventsByDay[day].map(event => (
-                                            <IonCard key={event.id} href={event.url} target="_blank" className="event-card">
+                                            <GlassCard key={event.id} href={event.url} target="_blank" className="event-card" variant="primary">
                                                 {event.imageUrl && (
                                                     <div className="event-image-container">
                                                         <img src={event.imageUrl} alt={event.title} className="event-image" />
@@ -406,7 +412,7 @@ const EventsPage: React.FC = () => {
                                                         Visit Website
                                                     </div>
                                                 </IonCardContent>
-                                            </IonCard>
+                                            </GlassCard>
                                         ))}
                                     </div>
                                 </div>
@@ -432,14 +438,6 @@ const EventsPage: React.FC = () => {
                 />
             </IonContent>
 
-            {/* Footer with last updated timestamp */}
-            <IonFooter className="custom-footer">
-                <div className="ion-text-center ion-padding-vertical">
-                    {state.lastUpdated && (
-                        <small>Last updated: {state.lastUpdated.toLocaleString()}</small>
-                    )}
-                </div>
-            </IonFooter>
 
             {/* Debug Panel - activated by Ctrl+Shift+D */}
             <DebugPanel

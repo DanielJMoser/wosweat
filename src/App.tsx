@@ -2,16 +2,10 @@ import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import {
   IonApp,
-  IonIcon,
-  IonLabel,
   IonRouterOutlet,
-  IonTabBar,
-  IonTabButton,
-  IonTabs,
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { calendar, bug, settings } from 'ionicons/icons';
 
 // Import your pages
 import EventsPage from './pages/EventsPage';
@@ -47,32 +41,19 @@ const App: React.FC = () => (
       {/* Wrap the entire app with EventsProvider */}
       <EventsProvider>
         <IonReactRouter>
-          <IonTabs>
-            <IonRouterOutlet>
-              <Route exact path="/events">
-                <EventsPage />
-              </Route>
-              <Route exact path="/direct">
-                <DirectEventsPage />
-              </Route>
-              {/* Add other routes as needed */}
+          <IonRouterOutlet>
+            <Route exact path="/events">
+              <EventsPage />
+            </Route>
+            <Route exact path="/direct">
+              <DirectEventsPage />
+            </Route>
+            {/* Add other routes as needed */}
 
-              <Route exact path="/">
-                <Redirect to="/events" />
-              </Route>
-            </IonRouterOutlet>
-            <IonTabBar slot="bottom">
-              <IonTabButton tab="events" href="/events">
-                <IonIcon icon={calendar} />
-                <IonLabel>Events</IonLabel>
-              </IonTabButton>
-              <IonTabButton tab="direct" href="/direct">
-                <IonIcon icon={bug} />
-                <IonLabel>Direct API</IonLabel>
-              </IonTabButton>
-              {/* Add other tab buttons as needed */}
-            </IonTabBar>
-          </IonTabs>
+            <Route exact path="/">
+              <Redirect to="/events" />
+            </Route>
+          </IonRouterOutlet>
         </IonReactRouter>
       </EventsProvider>
     </IonApp>

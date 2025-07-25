@@ -1,6 +1,89 @@
 /* EventsPage.scss */
 @import '../theme/variables.css';
 
+// Make IonContent transparent to show background
+.transparent-content {
+    --background: transparent;
+    --color: inherit;
+}
+
+// Ensure IonPage doesn't block background
+ion-page {
+    background: transparent;
+}
+
+// Additional transparency rules to ensure background visibility
+.events-container {
+    background: transparent; // Ensure no background blocks the animated mesh
+}
+
+// Background Layer Container for Enhanced Glassmorphism
+.background-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; // Increased to be above page background but below content
+    pointer-events: none;
+    overflow: hidden;
+    
+    // Create a more dynamic background for glassmorphism
+    background: 
+        radial-gradient(ellipse at 20% 80%, rgba(255, 107, 157, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(18, 194, 233, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 40% 40%, rgba(196, 113, 237, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, 
+            var(--ion-color-crust) 0%, 
+            var(--ion-color-mantle) 40%,
+            var(--ion-color-surface0) 80%,
+            var(--ion-color-surface1) 100%
+        );
+    
+    // Ensure AnimatedMesh is positioned correctly within background layer
+    .animated-mesh {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 10 !important; // Above other background elements
+    }
+}
+
+// Glass Enhancement Overlay
+.glass-enhancement-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5; // Below AnimatedMesh
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.03) 2px,
+            rgba(255, 255, 255, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 107, 157, 0.02) 2px,
+            rgba(255, 107, 157, 0.02) 4px
+        );
+    mix-blend-mode: overlay;
+    animation: shimmer 20s linear infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-10px) translateY(-10px); }
+    50% { transform: translateX(10px) translateY(5px); }
+    100% { transform: translateX(-10px) translateY(-10px); }
+}
+
 // Grid and background variables
 $grid-size: 50px;
 $grid-color: rgba(203, 166, 247, 0.1); // Mauve with low opacity
@@ -20,25 +103,9 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
     padding: 16px;
     min-height: 100%;
     position: relative;
-    background-color: var(--ion-color-crust);
+    z-index: 10; // Ensure content is above background
 
-    // Main background
-    &::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: -2;
-        background:
-                linear-gradient(0deg,
-                        var(--ion-color-crust) 0%,
-                        var(--ion-color-mantle) 80%,
-                        var(--ion-color-surface0) 100%);
-    }
-
-    // Grid background
+    // Enhanced grid background that complements glassmorphism
     &::after {
         content: '';
         position: fixed;
@@ -46,8 +113,8 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: -1;
-        opacity: 0.7;
+        z-index: 15; // Above background layer but below glass cards (z-index: 20)
+        opacity: 0.4; // Reduced for better glass effect
         background-image:
                 linear-gradient(to bottom, transparent 0%, transparent 60%, $grid-accent 100%),
                 linear-gradient(to right, $grid-color 1px, transparent 1px),
@@ -59,9 +126,9 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
     }
 }
 
-// Vaporwave sun
+// Vaporwave sun - enhanced for glassmorphism
 .vaporwave-sun {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
@@ -69,23 +136,24 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
     height: 300px;
     background: radial-gradient(
                     ellipse at center bottom,
-                    rgba(245, 194, 231, 0.6) 0%,
-                    rgba(243, 139, 168, 0.4) 40%,
-                    rgba(203, 166, 247, 0.2) 60%,
+                    rgba(245, 194, 231, 0.8) 0%,
+                    rgba(243, 139, 168, 0.6) 40%,
+                    rgba(203, 166, 247, 0.4) 60%,
                     rgba(17, 17, 27, 0) 80%
     );
-    z-index: -1;
+    z-index: 1; // Below AnimatedMesh
     pointer-events: none;
+    filter: blur(1px); // Subtle blur to enhance glass effect
 }
 
-// Horizontal lines (horizon)
+// Horizontal lines (horizon) - enhanced for glassmorphism
 .horizon-lines {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     height: 40%;
-    z-index: -1;
+    z-index: 2; // Below AnimatedMesh
     pointer-events: none;
     background: repeating-linear-gradient(
                     0deg,
@@ -104,18 +172,18 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
                     transparent 61px,
                     transparent 80px
     );
-    opacity: 0.15;
-    mix-blend-mode: screen;
+    opacity: 0.25; // Increased for better glass contrast
+    mix-blend-mode: overlay;
 }
 
-// Stars
+// Stars - enhanced for glassmorphism
 .stars {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 100%;
-    z-index: -1;
+    z-index: 3; // Below AnimatedMesh
     pointer-events: none;
 
     &::before, &::after {
@@ -226,23 +294,35 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
     color: var(--ion-color-subtext1);
 }
 
-// Event card styling
+// Event card styling - Enhanced for glassmorphism
 .event-card {
     position: relative;
     overflow: hidden;
-    background-color: var(--ion-color-mantle);
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     height: 100%;
-    border: 1px solid var(--ion-color-surface0);
+    z-index: 20; // Above background elements
+    
+    // Enhanced glassmorphism effect
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 0 0 1px rgba(255, 107, 157, 0.1) !important;
+    
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(203, 166, 247, 0.2);
-        border: 1px solid var(--ion-color-mauve);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            0 0 0 1px rgba(255, 107, 157, 0.3);
+        background: rgba(255, 255, 255, 0.12) !important;
+        border-color: rgba(255, 107, 157, 0.4) !important;
 
         &::before {
             opacity: 1;
@@ -262,7 +342,27 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
         height: 3px;
         background: linear-gradient(90deg, var(--ion-color-mauve), var(--ion-color-pink), var(--ion-color-blue));
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.4s ease;
+        box-shadow: 0 0 20px rgba(255, 107, 157, 0.5);
+        z-index: 1;
+    }
+    
+    // Additional glass highlight
+    &::after {
+        content: '';
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        right: 1px;
+        height: 50%;
+        background: linear-gradient(180deg, 
+            rgba(255, 255, 255, 0.15) 0%, 
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 100%
+        );
+        border-radius: 15px 15px 0 0;
+        pointer-events: none;
+        z-index: 1;
     }
 }
 
@@ -350,13 +450,40 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
     }
 }
 
-// Loading skeleton styling
+// Loading skeleton styling - Enhanced glassmorphism
 .skeleton-card {
-    background-color: var(--ion-color-mantle);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--ion-color-surface0);
+    z-index: 20;
+    
+    // Subtle animation for loading state
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent
+        );
+        animation: skeleton-shimmer 2s infinite;
+        z-index: 1;
+    }
+}
+
+@keyframes skeleton-shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
 ion-skeleton-text {
@@ -364,11 +491,16 @@ ion-skeleton-text {
     opacity: 0.3;
 }
 
-// Search bar styling
+// Search bar styling - Enhanced glassmorphism
 .search-container {
     padding: 16px;
-    background-color: var(--ion-color-mantle);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 15;
+    position: relative;
 }
 
 .custom-searchbar {
@@ -381,11 +513,14 @@ ion-skeleton-text {
     --box-shadow: none;
 }
 
-// Toolbar styling
+// Toolbar styling - Enhanced glassmorphism
 .custom-toolbar {
-    --background: var(--ion-color-mantle);
+    --background: rgba(255, 255, 255, 0.05);
     --color: var(--ion-color-light);
-    border-bottom: 1px solid var(--ion-color-surface0);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .custom-title {
@@ -480,18 +615,21 @@ ion-skeleton-text {
     color: var(--ion-color-subtext0);
 }
 
-// Day navigation
+// Day navigation - Enhanced glassmorphism
 .day-nav {
     position: sticky;
     top: 0;
-    background-color: var(--ion-color-mantle);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 100;
     padding: 8px 16px;
     display: flex;
     overflow-x: auto;
     gap: 8px;
     scrollbar-width: none;
-    border-bottom: 1px solid var(--ion-color-surface0);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 
     &::-webkit-scrollbar {
         display: none;

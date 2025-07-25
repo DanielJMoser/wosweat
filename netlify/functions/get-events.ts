@@ -77,7 +77,7 @@ export const handler: Handler = async (event) => {
         // Attempt to scrape events from the target sites
         const targetSites = [
             'https://www.treibhaus.at/programm',
-            'https://pmk.or.at/termine',
+            'https://pmk.or.at/de/events/',
             'https://artilleryproductions.bigcartel.com/'
         ];
 
@@ -195,7 +195,7 @@ function generateSampleEvents() {
             title: 'Art Exhibition Opening',
             date: nextWeek.toISOString().split('T')[0],
             description: 'Opening night for our new contemporary art exhibition featuring works from local artists.',
-            url: 'https://pmk.or.at/termine',
+            url: 'https://pmk.or.at/de/events/',
             venue: 'PMK Innsbruck',
             imageUrl: 'https://via.placeholder.com/300?text=Art+Exhibition'
         }

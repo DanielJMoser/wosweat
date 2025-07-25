@@ -116,12 +116,12 @@ function getSelectorsForSite(url: string) {
         };
     } else if (url.includes('pmk.or.at')) {
         return {
-            eventContainer: '.event, .veranstaltung, article',
-            title: 'h1, h2, h3, .title, .event-title',
-            date: '.date, .event-date, time, .datum',
-            description: '.description, .text, .content, p',
-            url: 'a',
-            image: 'img',
+            eventContainer: '.group\/teaser',
+            title: 'h2 a',
+            date: 'p.text-lg, p.text-xl',
+            description: 'p.md\\:text-lg',
+            url: 'h2 a',
+            image: 'img[loading="lazy"]',
             venue: 'PMK Innsbruck'
         };
     } else if (url.includes('artilleryproductions.bigcartel.com')) {

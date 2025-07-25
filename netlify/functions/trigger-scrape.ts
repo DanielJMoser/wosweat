@@ -36,7 +36,7 @@ export const handler: Handler = async (event) => {
         // Get the target sites to scrape
         const targetSites = [
             'https://www.treibhaus.at/programm',
-            'https://pmk.or.at/termine',
+            'https://pmk.or.at/de/events/',
             'https://artilleryproductions.bigcartel.com/',
             'https://www.music-hall.at/veranstaltungen/',
             'https://diebaeckerei.at/programm/'

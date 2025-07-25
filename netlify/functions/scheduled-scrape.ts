@@ -10,7 +10,7 @@ export const handler = schedule('0 0 * * *', async () => {
         // Define the websites to scrape
         const targetSites = [
             'https://www.treibhaus.at/programm',
-            'https://pmk.or.at/termine',
+            'https://pmk.or.at/de/events/',
             'https://artilleryproductions.bigcartel.com/',
             'https://www.music-hall.at/veranstaltungen/',
             'https://diebaeckerei.at/programm/'

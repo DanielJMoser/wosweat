@@ -1,0 +1,342 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+import { useMousePosition } from '../../hooks/useMousePosition';
+import { AnimationConfig } from '../../types/ui';
+import './AnimatedMesh.scss';
+
+interface AnimatedMeshProps {
+  config?: Partial<AnimationConfig>;
+  className?: string;
+}
+
+/**
+ * AnimatedMesh Component
+ * Creates a dynamic mesh background that follows mouse movement
+ * Uses GSAP for smooth, performant animations
+ */
+export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
+  config = {},
+  className = ''
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mousePosition = useMousePosition();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const meshPointsRef = useRef<HTMLElement[]>([]);
+  const linesRef = useRef<SVGLineElement[]>([]);
+
+  // Default configuration with user overrides
+  const meshConfig: AnimationConfig = {
+    intensity: 0.5,
+    speed: 2.0,
+    particleCount: 15, // Reduced for better performance
+    mouseInfluence: 0.2,
+    ...config
+  };
+
+  // Initialize mesh points
+  useEffect(() => {
+    console.log('Initializing AnimatedMesh...');
+    
+    if (!containerRef.current || isInitialized) return;
+
+    const container = containerRef.current;
+    const { particleCount } = meshConfig;
+
+    console.log(`Creating ${particleCount} mesh points`);
+
+    // Clear existing content
+    container.innerHTML = '';
+    meshPointsRef.current = [];
+    linesRef.current = [];
+
+    // Get container dimensions
+    const containerWidth = container.clientWidth || window.innerWidth;
+    const containerHeight = container.clientHeight || window.innerHeight;
+
+    console.log(`Container dimensions: ${containerWidth}x${containerHeight}`);
+
+    // Create SVG for lines first (so it's behind points)
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'mesh-lines');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    `;
+    container.appendChild(svg);
+
+    // Create mesh points
+    for (let i = 0; i < particleCount; i++) {
+      const point = document.createElement('div');
+      point.className = 'mesh-point';
+      point.dataset.index = i.toString();
+      
+      // Initial random position
+      const x = Math.random() * (containerWidth - 20) + 10;
+      const y = Math.random() * (containerHeight - 20) + 10;
+      
+      point.style.cssText = `
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: radial-gradient(circle, #ff6b9d 0%, #c471ed 50%, #12c2e9 100%);
+        border-radius: 50%;
+        pointer-events: none;
+        transform-origin: center center;
+        left: ${x}px;
+        top: ${y}px;
+        z-index: 1000;
+        box-shadow: 
+          0 0 20px rgba(255, 107, 157, 1),
+          0 0 40px rgba(196, 113, 237, 0.8),
+          0 0 60px rgba(18, 194, 233, 0.6);
+        border: 2px solid rgba(255, 107, 157, 0.8);
+      `;
+
+      container.appendChild(point);
+      meshPointsRef.current.push(point);
+      
+      console.log(`Created point ${i} at ${x}, ${y}`);
+    }
+
+    setIsInitialized(true);
+    console.log('AnimatedMesh initialization complete');
+  }, [meshConfig.particleCount]);
+
+  // Create floating animation with GSAP
+  useEffect(() => {
+    if (!isInitialized || meshPointsRef.current.length === 0) return;
+
+    console.log('Starting GSAP animations...');
+
+    // Kill existing timeline
+    if (timelineRef.current) {
+      timelineRef.current.kill();
+    }
+
+    // Create main timeline
+    timelineRef.current = gsap.timeline({ repeat: -1 });
+    const points = meshPointsRef.current;
+    const { intensity, speed } = meshConfig;
+
+    // Animate each point individually
+    points.forEach((point, index) => {
+      // Floating animation
+      gsap.to(point, {
+        x: `+=${(Math.random() - 0.5) * 100 * intensity}`,
+        y: `+=${(Math.random() - 0.5) * 60 * intensity}`,
+        scale: 0.8 + Math.random() * 0.6,
+        opacity: 0.4 + Math.random() * 0.6,
+        duration: 3 + Math.random() * 2,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: index * 0.2,
+      });
+
+      // Add rotation for extra visual interest
+      gsap.to(point, {
+        rotation: 360,
+        duration: 8 + Math.random() * 4,
+        ease: "none",
+        repeat: -1,
+      });
+    });
+
+    console.log('GSAP animations started');
+
+    return () => {
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+      }
+    };
+  }, [isInitialized, meshConfig.intensity, meshConfig.speed]);
+
+  // Mouse influence effect
+  useEffect(() => {
+    if (!isInitialized || meshPointsRef.current.length === 0) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const { mouseInfluence } = meshConfig;
+    const containerRect = container.getBoundingClientRect();
+    const mouseX = mousePosition.x - containerRect.left;
+    const mouseY = mousePosition.y - containerRect.top;
+
+    // Apply mouse influence to nearby points
+    meshPointsRef.current.forEach((point) => {
+      const currentX = parseFloat(point.style.left) || 0;
+      const currentY = parseFloat(point.style.top) || 0;
+
+      const distance = Math.sqrt(
+        Math.pow(mouseX - currentX, 2) + Math.pow(mouseY - currentY, 2)
+      );
+
+      const maxDistance = 150;
+      const influence = Math.max(0, 1 - distance / maxDistance) * mouseInfluence;
+
+      if (influence > 0.1) {
+        const deltaX = (mouseX - currentX) * influence * 0.1;
+        const deltaY = (mouseY - currentY) * influence * 0.1;
+
+        gsap.to(point, {
+          x: `+=${deltaX}`,
+          y: `+=${deltaY}`,
+          scale: 1 + influence * 0.5,
+          duration: 0.5,
+          ease: "power2.out"
+        });
+      }
+    });
+  }, [mousePosition, isInitialized, meshConfig.mouseInfluence]);
+
+  // Update connecting lines
+  useEffect(() => {
+    if (!isInitialized || !containerRef.current) return;
+
+    const container = containerRef.current;
+    const svg = container.querySelector('.mesh-lines') as SVGElement;
+    if (!svg) return;
+
+    // Clear existing lines
+    svg.innerHTML = '';
+    linesRef.current = [];
+
+    const points = meshPointsRef.current;
+    const maxDistance = 120;
+
+    // Create lines between nearby points
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const point1 = points[i];
+        const point2 = points[j];
+
+        const x1 = parseFloat(point1.style.left) || 0;
+        const y1 = parseFloat(point1.style.top) || 0;
+        const x2 = parseFloat(point2.style.left) || 0;
+        const y2 = parseFloat(point2.style.top) || 0;
+
+        const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+
+        if (distance <= maxDistance) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          const opacity = (1 - distance / maxDistance) * 0.8;
+          
+          line.setAttribute('x1', (x1 + 6).toString()); // +6 for point center (12px/2)
+          line.setAttribute('y1', (y1 + 6).toString());
+          line.setAttribute('x2', (x2 + 6).toString());
+          line.setAttribute('y2', (y2 + 6).toString());
+          line.setAttribute('stroke', `rgba(255, 107, 157, ${opacity})`);
+          line.setAttribute('stroke-width', '2');
+          line.setAttribute('class', 'mesh-line');
+
+          svg.appendChild(line);
+          linesRef.current.push(line);
+        }
+      }
+    }
+  }, [isInitialized]);
+
+  // Periodic line updates
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const updateLines = () => {
+      const container = containerRef.current;
+      const svg = container?.querySelector('.mesh-lines') as SVGElement;
+      if (!svg) return;
+
+      // Clear and recreate lines
+      svg.innerHTML = '';
+      linesRef.current = [];
+
+      const points = meshPointsRef.current;
+      const maxDistance = 120;
+
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const point1 = points[i];
+          const point2 = points[j];
+
+          const rect1 = point1.getBoundingClientRect();
+          const rect2 = point2.getBoundingClientRect();
+          const containerRect = container!.getBoundingClientRect();
+
+          const x1 = rect1.left - containerRect.left + 6;
+          const y1 = rect1.top - containerRect.top + 6;
+          const x2 = rect2.left - containerRect.left + 6;
+          const y2 = rect2.top - containerRect.top + 6;
+
+          const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+
+          if (distance <= maxDistance) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            const opacity = (1 - distance / maxDistance) * 0.4;
+            
+            line.setAttribute('x1', x1.toString());
+            line.setAttribute('y1', y1.toString());
+            line.setAttribute('x2', x2.toString());
+            line.setAttribute('y2', y2.toString());
+            line.setAttribute('stroke', `rgba(255, 107, 157, ${opacity})`);
+            line.setAttribute('stroke-width', '2');
+            line.setAttribute('class', 'mesh-line');
+
+            svg.appendChild(line);
+            linesRef.current.push(line);
+          }
+        }
+      }
+    };
+
+    const interval = setInterval(updateLines, 100); // Update lines every 100ms
+    return () => clearInterval(interval);
+  }, [isInitialized]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (!isInitialized) return;
+      
+      console.log('Window resized, reinitializing mesh...');
+      setIsInitialized(false);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isInitialized]);
+
+  // Respect user's motion preferences
+  const shouldAnimate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  console.log(`AnimatedMesh render: shouldAnimate=${shouldAnimate}, isInitialized=${isInitialized}`);
+
+  if (!shouldAnimate) {
+    return null;
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className={`animated-mesh ${className}`}
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 100,
+        pointerEvents: 'none',
+        background: 'transparent'
+      }}
+    />
+  );
+};

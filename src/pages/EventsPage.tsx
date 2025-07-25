@@ -31,6 +31,7 @@ import { EventService } from '../services/events-service';
 import { EventData } from '../../shared/types/events';
 import { useDebugMode } from '../hooks/useDebugMode';
 import { DebugPanel } from '../components/DebugPanel';
+import { AnimatedMesh } from '../components/AnimatedMesh';
 import { DebugInfo } from '../types/ui';
 import './EventsPage.scss';
 
@@ -227,6 +228,9 @@ const EventsPage: React.FC = () => {
 
     return (
         <IonPage>
+            {/* Animated Mesh Background */}
+            <AnimatedMesh config={{ particleCount: 12, intensity: 0.4 }} />
+            
             {/* Vaporwave background elements */}
             <div className="stars"></div>
             <div className="horizon-lines"></div>

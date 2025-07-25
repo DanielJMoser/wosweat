@@ -24,6 +24,8 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const meshPointsRef = useRef<HTMLElement[]>([]);
   const linesRef = useRef<SVGLineElement[]>([]);
+  const gravityWellsRef = useRef<Array<{x: number, y: number, strength: number, id: string}>>([]);
+  const physicsAnimationRef = useRef<number | null>(null);
 
   // Default configuration with user overrides
   const meshConfig: AnimationConfig = {
@@ -31,6 +33,8 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
     speed: 2.0,
     particleCount: 15, // Reduced for better performance
     mouseInfluence: 0.2,
+    gravityStrength: 300, // Enhanced gravity well strength
+    maxGravityDistance: 350, // Increased maximum distance for gravity effect
     ...config
   };
 
@@ -162,44 +166,117 @@ export const AnimatedMesh: React.FC<AnimatedMeshProps> = ({
     };
   }, [isInitialized, meshConfig.intensity, meshConfig.speed]);
 
-  // Mouse influence effect
+  // Gravity wells physics system
   useEffect(() => {
     if (!isInitialized || meshPointsRef.current.length === 0) return;
 
     const container = containerRef.current;
     if (!container) return;
 
-    const { mouseInfluence } = meshConfig;
+    const { gravityStrength = 150, maxGravityDistance = 200, mouseInfluence } = meshConfig;
     const containerRect = container.getBoundingClientRect();
     const mouseX = mousePosition.x - containerRect.left;
     const mouseY = mousePosition.y - containerRect.top;
 
-    // Apply mouse influence to nearby points
-    meshPointsRef.current.forEach((point) => {
-      const currentX = parseFloat(point.style.left) || 0;
-      const currentY = parseFloat(point.style.top) || 0;
+    // Create gravity well at mouse position
+    const gravityWell = {
+      x: mouseX,
+      y: mouseY,
+      strength: gravityStrength,
+      id: 'mouse'
+    };
 
-      const distance = Math.sqrt(
-        Math.pow(mouseX - currentX, 2) + Math.pow(mouseY - currentY, 2)
-      );
+    // Physics simulation loop
+    const animatePhysics = () => {
+      meshPointsRef.current.forEach((point, index) => {
+        const currentX = parseFloat(point.style.left) || 0;
+        const currentY = parseFloat(point.style.top) || 0;
 
-      const maxDistance = 150;
-      const influence = Math.max(0, 1 - distance / maxDistance) * mouseInfluence;
+        // Calculate distance to gravity well
+        const dx = gravityWell.x - (currentX + 6); // +6 for point center
+        const dy = gravityWell.y - (currentY + 6);
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (influence > 0.1) {
-        const deltaX = (mouseX - currentX) * influence * 0.1;
-        const deltaY = (mouseY - currentY) * influence * 0.1;
+        if (distance < maxGravityDistance && distance > 0) {
+          // Calculate gravitational force (inverse square law with enhanced damping)
+          const force = Math.min(gravityWell.strength / (distance * distance + 50), 4);
+          const influence = Math.max(0, 1 - distance / maxGravityDistance);
+          
+          // Orbital mechanics - create more pronounced circular motion
+          const angle = Math.atan2(dy, dx);
+          const orbitalVelocity = Math.sqrt(force * distance) * 0.05;
+          
+          // Add tangential velocity for stronger orbital motion
+          const tangentAngle = angle + Math.PI / 2;
+          const orbitalX = Math.cos(tangentAngle) * orbitalVelocity * influence;
+          const orbitalY = Math.sin(tangentAngle) * orbitalVelocity * influence;
+          
+          // Enhanced gravitational pull
+          const pullStrength = force * influence * 0.6;
+          const pullX = Math.cos(angle) * pullStrength;
+          const pullY = Math.sin(angle) * pullStrength;
+          
+          // Combine forces with stronger orbital component
+          const totalX = pullX + orbitalX * 1.5;
+          const totalY = pullY + orbitalY * 1.5;
 
-        gsap.to(point, {
-          x: `+=${deltaX}`,
-          y: `+=${deltaY}`,
-          scale: 1 + influence * 0.5,
-          duration: 0.5,
-          ease: "power2.out"
-        });
+          // Apply physics with more responsive animation
+          gsap.to(point, {
+            x: `+=${totalX}`,
+            y: `+=${totalY}`,
+            scale: 1.2 + influence * 1.2,
+            rotation: `+=${orbitalVelocity * 40}`,
+            duration: 0.05,
+            ease: "power1.out",
+            overwrite: "auto"
+          });
+
+          // Dramatically enhanced glow effect with distance-based intensity
+          const glowIntensity = Math.max(0.5, influence * 1.5);
+          const proximityBoost = Math.max(1, (maxGravityDistance - distance) / maxGravityDistance * 3);
+          point.style.filter = `
+            drop-shadow(0 0 ${12 + glowIntensity * 20}px rgba(255, 107, 157, ${glowIntensity * proximityBoost}))
+            drop-shadow(0 0 ${24 + glowIntensity * 35}px rgba(196, 113, 237, ${glowIntensity * proximityBoost * 0.8}))
+            drop-shadow(0 0 ${36 + glowIntensity * 50}px rgba(18, 194, 233, ${glowIntensity * proximityBoost * 0.6}))
+            drop-shadow(0 0 ${48 + glowIntensity * 70}px rgba(255, 255, 255, ${glowIntensity * proximityBoost * 0.3}))
+          `;
+          
+          // Add pulsing effect for very close particles
+          if (distance < maxGravityDistance * 0.3) {
+            gsap.to(point, {
+              opacity: 0.8 + Math.sin(Date.now() * 0.01 + index) * 0.2,
+              duration: 0.1,
+              ease: "power1.inOut"
+            });
+          }
+        } else {
+          // Gradually reset effects when outside gravity well
+          gsap.to(point, {
+            scale: 1,
+            opacity: 0.4 + Math.random() * 0.6,
+            duration: 0.5,
+            ease: "power2.out"
+          });
+          point.style.filter = '';
+        }
+      });
+
+      // Continue animation loop
+      physicsAnimationRef.current = requestAnimationFrame(animatePhysics);
+    };
+
+    // Start physics animation
+    if (physicsAnimationRef.current) {
+      cancelAnimationFrame(physicsAnimationRef.current);
+    }
+    physicsAnimationRef.current = requestAnimationFrame(animatePhysics);
+
+    return () => {
+      if (physicsAnimationRef.current) {
+        cancelAnimationFrame(physicsAnimationRef.current);
       }
-    });
-  }, [mousePosition, isInitialized, meshConfig.mouseInfluence]);
+    };
+  }, [mousePosition, isInitialized, meshConfig]);
 
   // Update connecting lines
   useEffect(() => {

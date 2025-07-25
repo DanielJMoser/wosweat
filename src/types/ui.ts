@@ -12,6 +12,8 @@ export interface AnimationConfig {
   speed: number;
   particleCount: number;
   mouseInfluence: number;
+  gravityStrength?: number;
+  maxGravityDistance?: number;
 }
 
 export interface MousePosition {

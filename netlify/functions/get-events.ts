@@ -100,23 +100,40 @@ export const handler: Handler = async (event) => {
 
         console.log(`Retrieved a total of ${allEvents.length} events from all sites`);
 
-        // Store events for future use if we found any
-        if (allEvents.length > 0) {
+        // Filter out past events (keep only today and future events)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        
+        const currentEvents = allEvents.filter(event => {
             try {
-                await storeEvents(allEvents);
-                console.log(`Successfully stored ${allEvents.length} events`);
+                const eventDate = new Date(event.date);
+                eventDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
+                return eventDate >= today;
+            } catch (error) {
+                console.warn(`Invalid date format for event: ${event.title}, date: ${event.date}`);
+                return false; // Exclude events with invalid dates
+            }
+        });
+
+        console.log(`Filtered to ${currentEvents.length} current/future events (removed ${allEvents.length - currentEvents.length} past events)`);
+
+        // Store events for future use if we found any
+        if (currentEvents.length > 0) {
+            try {
+                await storeEvents(currentEvents);
+                console.log(`Successfully stored ${currentEvents.length} current events`);
             } catch (storageError) {
                 console.error('Failed to store events:', storageError);
             }
 
-            // Return the real events we found
+            // Return the current events we found
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
                     success: true,
-                    events: allEvents,
-                    count: allEvents.length,
+                    events: currentEvents,
+                    count: currentEvents.length,
                     fromCache: false,
                     mode: 'scraped',
                     timestamp: new Date().toISOString()

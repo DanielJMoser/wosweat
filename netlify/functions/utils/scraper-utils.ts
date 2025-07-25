@@ -92,8 +92,40 @@ export async function getStoredEvents(): Promise<EventData[]> {
 
         const rawData = fs.readFileSync(filePath, 'utf8');
         const data = JSON.parse(rawData);
-        console.log(`Retrieved ${data.events?.length || 0} events from cache`);
-        return data.events || [];
+        
+        // Check if cache has expired (5 minutes TTL)
+        const cacheTimestamp = new Date(data.timestamp);
+        const now = new Date();
+        const cacheAgeMs = now.getTime() - cacheTimestamp.getTime();
+        const cacheAgeMinutes = cacheAgeMs / (1000 * 60);
+        
+        console.log(`Cache age: ${cacheAgeMinutes.toFixed(1)} minutes`);
+        
+        if (cacheAgeMinutes > 5) {
+            console.log('Cache expired, removing old cache file');
+            fs.unlinkSync(filePath);
+            return [];
+        }
+        
+        console.log(`Retrieved ${data.events?.length || 0} events from valid cache`);
+        
+        // Filter out past events from cached data
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const currentEvents = (data.events || []).filter((event: any) => {
+            try {
+                const eventDate = new Date(event.date);
+                eventDate.setHours(0, 0, 0, 0);
+                return eventDate >= today;
+            } catch (error) {
+                console.warn(`Invalid cached event date: ${event.title}, date: ${event.date}`);
+                return false;
+            }
+        });
+        
+        console.log(`Filtered cached events to ${currentEvents.length} current/future events`);
+        return currentEvents;
     } catch (error) {
         console.error('Error reading cached events:', error);
         return [];
@@ -246,8 +278,23 @@ function extractDateFromText(dateText: string): string {
         }
     }
 
-    // If no match found, return the original text
-    return cleanDateText;
+    // If no date pattern matched and the text looks like just time (e.g., "20:30 UHR"), 
+    // return empty string to indicate no date was found
+    const timePattern = /^\d{1,2}:\d{2}\s*(UHR|AM|PM)?$/i;
+    if (timePattern.test(cleanDateText)) {
+        console.log(`Time-only pattern detected: ${cleanDateText}, returning empty string`);
+        return '';
+    }
+    
+    // If the text is very short or looks like a time, return empty string
+    if (cleanDateText.length < 5 || /^\d{1,2}:\d{2}/.test(cleanDateText)) {
+        console.log(`Short or time-like text detected: ${cleanDateText}, returning empty string`);
+        return '';
+    }
+    
+    // If no match found and text doesn't look like a date, return empty string
+    console.log(`No date pattern matched for: ${cleanDateText}, returning empty string`);
+    return '';
 }
 
 /**
@@ -561,25 +608,32 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
                 // Generate ID
                 const id = `event-${index}-${Date.now()}`;
 
-                // Check if we have enough info to add this event
-                const hasDate = date && date !== dateText && date !== title;
+                // Check if we have a valid parsed date
+                const hasValidDate = date && date !== dateText && date !== title && date !== '';
 
-                if (title && (hasDate || dateText)) {
-                    // Add to events array
-                    events.push({
-                        id,
-                        title,
-                        date: hasDate ? date : dateText,
-                        description,
-                        url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
-                        venue: selectors.venue,
-                        imageUrl: imageUrl ? new URL(imageUrl, url).toString() : undefined,
-                    });
-
-                    console.log(`  Added event: ${title}`);
-                } else {
-                    console.log(`  Skipped event ${index}: Insufficient data (title: ${Boolean(title)}, date: ${hasDate || Boolean(dateText)})`);
+                // Skip events without valid dates or titles
+                if (!title) {
+                    console.log(`  Skipped event ${index}: No title found`);
+                    return;
                 }
+
+                if (!hasValidDate) {
+                    console.log(`  Skipped event ${index}: No valid date found (original: "${dateText}", parsed: "${date}")`);
+                    return;
+                }
+
+                // Add to events array
+                events.push({
+                    id,
+                    title,
+                    date,
+                    description,
+                    url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
+                    venue: selectors.venue,
+                    imageUrl: imageUrl ? new URL(imageUrl, url).toString() : undefined,
+                });
+
+                console.log(`  Added event: ${title}`);
             } catch (eventError) {
                 console.warn(`Error parsing event at index ${index}:`, eventError);
                 // Continue with next event
@@ -746,25 +800,32 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
                 // Generate ID
                 const id = `event-${index}-${Date.now()}`;
 
-                // Check if we have enough info to add this event
-                const hasDate = date && date !== dateText && date !== title;
+                // Check if we have a valid parsed date
+                const hasValidDate = date && date !== dateText && date !== title && date !== '';
 
-                if (title && (hasDate || dateText)) {
-                    // Add to events array
-                    events.push({
-                        id,
-                        title,
-                        date: hasDate ? date : dateText,
-                        description,
-                        url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
-                        venue: selectors.venue,
-                        imageUrl: imageUrl ? new URL(imageUrl, url).toString() : undefined,
-                    });
-
-                    console.log(`  Added event: ${title}`);
-                } else {
-                    console.log(`  Skipped event ${index}: Insufficient data (title: ${Boolean(title)}, date: ${hasDate || Boolean(dateText)})`);
+                // Skip events without valid dates or titles
+                if (!title) {
+                    console.log(`  Skipped event ${index}: No title found`);
+                    return;
                 }
+
+                if (!hasValidDate) {
+                    console.log(`  Skipped event ${index}: No valid date found (original: "${dateText}", parsed: "${date}")`);
+                    return;
+                }
+
+                // Add to events array
+                events.push({
+                    id,
+                    title,
+                    date,
+                    description,
+                    url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
+                    venue: selectors.venue,
+                    imageUrl: imageUrl ? new URL(imageUrl, url).toString() : undefined,
+                });
+
+                console.log(`  Added event: ${title}`);
             } catch (eventError) {
                 console.warn(`Error parsing event at index ${index}:`, eventError);
                 // Continue with next event

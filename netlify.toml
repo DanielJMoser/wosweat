@@ -8,7 +8,7 @@
   external_node_modules = ["@sparticuz/chromium"]
 
 [dev]
-  functions = "netlify/functions"
+  functions = "dist/netlify/functions"
   publish = "dist"
   port = 8888
   autoLaunch = true

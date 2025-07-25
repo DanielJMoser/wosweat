@@ -1,0 +1,196 @@
+// DebugPanel Component Styles
+// Overlay panel for debugging information
+
+.debug-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.debug-panel {
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  
+  // Override default card styles
+  margin: 0;
+  
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    
+    ion-icon {
+      font-size: 1.2rem;
+      color: #ff6b9d;
+    }
+  }
+  
+  &__close {
+    --color: rgba(255, 255, 255, 0.7);
+    --background: transparent;
+    
+    &:hover {
+      --color: rgba(255, 255, 255, 0.9);
+    }
+  }
+  
+  &__content {
+    padding: 1.5rem;
+  }
+  
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    
+    ion-button {
+      --color: rgba(255, 255, 255, 0.8);
+      --border-color: rgba(255, 255, 255, 0.3);
+      
+      &:hover {
+        --color: rgba(255, 255, 255, 1);
+        --border-color: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+  
+  &__footer {
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 16px 16px;
+    
+    small {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.debug-info-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.debug-info-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  
+  label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    
+    ion-icon {
+      font-size: 0.9rem;
+    }
+  }
+  
+  &.debug-error {
+    grid-column: 1 / -1;
+    
+    label {
+      color: #F44336;
+    }
+  }
+}
+
+.debug-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.9);
+  
+  &.loading {
+    color: #FF9800;
+    animation: pulse 1s infinite;
+  }
+  
+  &.debug-cache-status {
+    font-weight: 600;
+  }
+  
+  &.debug-timestamp {
+    font-size: 0.75rem;
+  }
+  
+  &.debug-error-message {
+    color: #F44336;
+    word-break: break-word;
+    font-size: 0.8rem;
+  }
+}
+
+// Pulse animation for loading indicator
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Mobile responsiveness
+@media (max-width: 768px) {
+  .debug-panel-overlay {
+    padding: 0.5rem;
+  }
+  
+  .debug-panel {
+    max-height: 90vh;
+    
+    &__header {
+      padding: 0.75rem 1rem;
+    }
+    
+    &__content {
+      padding: 1rem;
+    }
+    
+    &__footer {
+      padding: 0.5rem 1rem;
+    }
+  }
+  
+  .debug-info-item {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    
+    label {
+      font-size: 0.8rem;
+    }
+  }
+  
+  .debug-value {
+    font-size: 0.8rem;
+  }
+}

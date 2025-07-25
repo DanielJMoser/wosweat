@@ -1,0 +1,115 @@
+// GlassCard Component Styles
+// Implements glassmorphism design with hardware acceleration
+
+.glass-card {
+  // Base glassmorphism styling
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  
+  // Performance optimization
+  will-change: transform;
+  transform: translateZ(0); // Enable hardware acceleration
+  
+  // Smooth transitions
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // Hover effects
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  // Focus state for accessibility
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 2px;
+  }
+  
+  // Remove default Ionic card styles that conflict
+  --background: transparent;
+  --color: inherit;
+  margin: 0; // Reset Ionic margins
+  
+  // Variant styles
+  &--primary {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+  
+  &--secondary {
+    background: rgba(139, 69, 19, 0.1); // Subtle brown tint for vaporwave
+    border-color: rgba(255, 182, 193, 0.2);
+    
+    &:hover {
+      background: rgba(139, 69, 19, 0.15);
+      border-color: rgba(255, 182, 193, 0.3);
+    }
+  }
+  
+  &--accent {
+    background: rgba(255, 107, 157, 0.1); // Pink accent for vaporwave
+    border-color: rgba(255, 107, 157, 0.3);
+    
+    &:hover {
+      background: rgba(255, 107, 157, 0.15);
+      border-color: rgba(255, 107, 157, 0.4);
+    }
+  }
+}
+
+// Fallback for browsers without backdrop-filter support
+@supports not (backdrop-filter: blur(10px)) {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 
+      inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+      0 8px 32px rgba(0, 0, 0, 0.3);
+    
+    &--primary {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    &--secondary {
+      background: rgba(139, 69, 19, 0.15);
+    }
+    
+    &--accent {
+      background: rgba(255, 107, 157, 0.15);
+    }
+  }
+}
+
+// Respect user preference for reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .glass-card {
+    transition: none;
+    
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+// Mobile optimization
+@media (max-width: 768px) {
+  .glass-card {
+    // Slightly less blur on mobile for performance
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    
+    // Reduce hover effects on touch devices
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+}

@@ -29,6 +29,9 @@ import { refresh, calendar, locate, link, bug } from 'ionicons/icons';
 import { useEvents } from '../context/EventsContext';
 import { EventService } from '../services/events-service';
 import { EventData } from '../../shared/types/events';
+import { useDebugMode } from '../hooks/useDebugMode';
+import { DebugPanel } from '../components/DebugPanel';
+import { DebugInfo } from '../types/ui';
 import './EventsPage.scss';
 
 // Helper function to format dates
@@ -105,6 +108,7 @@ const isToday = (dateString: string): boolean => {
 
 const EventsPage: React.FC = () => {
     const { state, fetchEvents, triggerUpdate } = useEvents();
+    const { isDebugMode, disableDebugMode } = useDebugMode();
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMessage, setToastMessage] = useState<string>('');
     const [searchText, setSearchText] = useState<string>('');
@@ -114,6 +118,15 @@ const EventsPage: React.FC = () => {
 
     // Refs for each day section for scrolling
     const daySectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+    // Create debug info object
+    const debugInfoObj: DebugInfo = {
+        eventsCount: state.events.length,
+        lastUpdated: state.lastUpdated,
+        cacheStatus: 'hit', // This would be determined by the service
+        loadingState: state.loading,
+        errorMessage: state.error || undefined
+    };
 
     // Debug effect - log state changes
     useEffect(() => {
@@ -251,7 +264,8 @@ const EventsPage: React.FC = () => {
                     />
                 </div>
 
-                {/* Debug info - remove in production */}
+                {/* Debug info - hidden unless debug mode active */}
+                {isDebugMode && (
                 <div className="ion-padding">
                     <IonGrid>
                         <IonRow>
@@ -278,6 +292,7 @@ const EventsPage: React.FC = () => {
                         </IonRow>
                     </IonGrid>
                 </div>
+                )}
 
                 {/* Day navigation */}
                 {!state.loading && sortedDays.length > 0 && (
@@ -421,6 +436,13 @@ const EventsPage: React.FC = () => {
                     )}
                 </div>
             </IonFooter>
+
+            {/* Debug Panel - activated by Ctrl+Shift+D */}
+            <DebugPanel
+                visible={isDebugMode}
+                debugInfo={debugInfoObj}
+                onClose={disableDebugMode}
+            />
         </IonPage>
     );
 };

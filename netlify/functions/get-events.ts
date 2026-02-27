@@ -8,27 +8,19 @@ export const handler: Handler = async (event) => {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+        'Cache-Control': 'public, max-age=300'
     };
 
     if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers,
-            body: ''
-        };
+        return { statusCode: 200, headers, body: '' };
     }
 
     try {
-        console.log('Query parameters:', event.queryStringParameters);
-
         const forceRefresh = event.queryStringParameters?.refresh === 'true';
 
         if (!forceRefresh) {
             if (event.queryStringParameters?.test === 'true') {
-                console.log('Running in test mode with sample events');
                 const sampleEvents = generateSampleEvents();
-
                 return {
                     statusCode: 200,
                     headers,
@@ -45,7 +37,6 @@ export const handler: Handler = async (event) => {
 
             const cachedEvents = await getStoredEvents();
             if (cachedEvents.length > 0) {
-                console.log(`Using ${cachedEvents.length} cached events`);
                 return {
                     statusCode: 200,
                     headers,
@@ -58,59 +49,44 @@ export const handler: Handler = async (event) => {
                         timestamp: new Date().toISOString()
                     })
                 };
-            } else {
-                console.log('No cached events found');
             }
-        } else {
-            console.log('Force refresh requested, skipping cache');
         }
-
-        console.log('Fetching fresh events data');
 
         const targetSites = [
             'https://www.treibhaus.at/programm',
             'https://pmk.or.at/de/events/',
-            'https://artilleryproductions.bigcartel.com/'
+            'https://artilleryproductions.bigcartel.com/',
+            'https://diebaeckerei.at/programm/'
         ];
 
         const useJsRendering = event.queryStringParameters?.js === 'true';
-
         let allEvents: EventData[] = [];
 
         for (const site of targetSites) {
             try {
-                console.log(`Attempting to scrape ${site}`);
                 const siteEvents = await scrapeEvents(site, useJsRendering);
-                console.log(`Successfully scraped ${siteEvents.length} events from ${site}`);
                 allEvents = [...allEvents, ...siteEvents];
             } catch (siteError) {
                 console.error(`Error scraping ${site}:`, siteError);
-                // Continue with the next site
             }
         }
 
-        console.log(`Retrieved a total of ${allEvents.length} events from all sites`);
-
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const currentEvents = allEvents.filter(event => {
             try {
                 const eventDate = new Date(event.date);
                 eventDate.setHours(0, 0, 0, 0);
                 return eventDate >= today;
-            } catch (error) {
-                console.warn(`Invalid date format for event: ${event.title}, date: ${event.date}`);
+            } catch {
                 return false;
             }
         });
 
-        console.log(`Filtered to ${currentEvents.length} current/future events (removed ${allEvents.length - currentEvents.length} past events)`);
-
         if (currentEvents.length > 0) {
             try {
                 await storeEvents(currentEvents);
-                console.log(`Successfully stored ${currentEvents.length} current events`);
             } catch (storageError) {
                 console.error('Failed to store events:', storageError);
             }
@@ -129,10 +105,7 @@ export const handler: Handler = async (event) => {
             };
         }
 
-        // If we didn't find any events, use fallback sample events
-        console.log('No events found from any source. Using fallback sample events.');
         const sampleEvents = generateSampleEvents();
-
         return {
             statusCode: 200,
             headers,
@@ -148,9 +121,7 @@ export const handler: Handler = async (event) => {
     } catch (error) {
         console.error('Error retrieving events:', error);
 
-        // Return sample events in case of any error
         const sampleEvents = generateSampleEvents();
-
         return {
             statusCode: 200,
             headers,

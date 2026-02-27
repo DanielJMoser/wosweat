@@ -137,6 +137,30 @@ function getSelectorsForSite(url: string) {
         };
     }
 
+    if (url.includes('brux.at')) {
+        return {
+            eventContainer: 'article.lp-item',
+            title: '.lp-title',
+            date: '.lp-date',
+            description: '.lp-subtitle',
+            url: '.lp-title-link',
+            image: 'img',
+            venue: 'BRUX Freies Theater Innsbruck'
+        };
+    }
+
+    if (url.includes('livestage-tirol.com')) {
+        return {
+            eventContainer: '.ww_news-list-item',
+            title: 'h3',
+            date: '.ww_news-list-item_date-date',
+            description: '.text-secondary.text-uppercase',
+            url: 'h3 a',
+            image: 'img',
+            venue: 'LiveStage Tirol'
+        };
+    }
+
     return {
         eventContainer: 'article, .event, .veranstaltung, div[class*="event"], li',
         title: 'h1, h2, h3, h4, .title, .event-title',
@@ -335,6 +359,44 @@ function extractBaeckereiEvents($: cheerio.CheerioAPI, url: string): EventData[]
     return events;
 }
 
+function extractKellertheaterEvents($: cheerio.CheerioAPI, url: string): EventData[] {
+    const events: EventData[] = [];
+
+    $('.dayacts article').each((index: number, element: any) => {
+        try {
+            const article = $(element);
+            const jsonLdScript = article.find('script[type="application/ld+json"]').html();
+            if (!jsonLdScript) return;
+
+            const jsonLd = JSON.parse(jsonLdScript);
+            const startDate = jsonLd.startDate;
+            const eventDate = startDate ? startDate.split('T')[0] : '';
+            if (!eventDate) return;
+
+            const title = jsonLd.name || cleanText(article.find('h4').text());
+            if (!title) return;
+
+            const description = cleanText(article.find('.text p').text());
+            const eventUrl = jsonLd.url || '';
+            const imageUrl = jsonLd.image || article.find('img').attr('src') || undefined;
+
+            events.push({
+                id: `event-${index}-${Date.now()}`,
+                title,
+                date: eventDate,
+                description,
+                url: eventUrl || url,
+                venue: 'Innsbrucker Kellertheater',
+                imageUrl,
+            });
+        } catch (error) {
+            console.error(`Error parsing Kellertheater event at index ${index}:`, error);
+        }
+    });
+
+    return events;
+}
+
 function extractGenericEvents($: cheerio.CheerioAPI, url: string, selectors: ReturnType<typeof getSelectorsForSite>): EventData[] {
     const events: EventData[] = [];
 
@@ -378,6 +440,10 @@ async function scrapeWithCheerio(url: string): Promise<EventData[]> {
 
         if (url.includes('diebaeckerei.at')) {
             return extractBaeckereiEvents($, url);
+        }
+
+        if (url.includes('kellertheater.at')) {
+            return extractKellertheaterEvents($, url);
         }
 
         return extractGenericEvents($, url, getSelectorsForSite(url));

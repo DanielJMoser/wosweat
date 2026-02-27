@@ -56,7 +56,10 @@ export const handler: Handler = async (event) => {
             'https://www.treibhaus.at/programm',
             'https://pmk.or.at/de/events/',
             'https://artilleryproductions.bigcartel.com/',
-            'https://diebaeckerei.at/programm/'
+            'https://diebaeckerei.at/programm/',
+            'https://www.brux.at/spielplan/',
+            'https://www.kellertheater.at/spielplan/terminuebersicht/',
+            'https://www.livestage-tirol.com/'
         ];
 
         const useJsRendering = event.queryStringParameters?.js === 'true';

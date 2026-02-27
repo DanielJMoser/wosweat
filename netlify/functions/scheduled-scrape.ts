@@ -9,7 +9,10 @@ export const handler = schedule('0 0 * * *', async () => {
             'https://pmk.or.at/de/events/',
             'https://artilleryproductions.bigcartel.com/',
             'https://www.music-hall.at/veranstaltungen/',
-            'https://diebaeckerei.at/programm/'
+            'https://diebaeckerei.at/programm/',
+            'https://www.brux.at/spielplan/',
+            'https://www.kellertheater.at/spielplan/terminuebersicht/',
+            'https://www.livestage-tirol.com/'
         ];
 
         const errors: Error[] = [];

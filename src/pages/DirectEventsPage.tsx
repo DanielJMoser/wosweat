@@ -9,8 +9,6 @@ import {
     IonContent,
     IonHeader,
     IonIcon,
-    IonItem,
-    IonLabel,
     IonList,
     IonLoading,
     IonPage,
@@ -24,6 +22,7 @@ import {
 } from '@ionic/react';
 import { calendar, location, refresh, bug } from 'ionicons/icons';
 import { EventData } from '../../shared/types/events';
+import { formatDate } from '../utils/date-utils';
 import './EventsPage.scss';
 
 const DirectEventsPage: React.FC = () => {
@@ -35,7 +34,6 @@ const DirectEventsPage: React.FC = () => {
     const [toastMessage, setToastMessage] = useState<string>('');
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-    // Fetch events directly from the API
     const fetchEvents = async (forceRefresh = false) => {
         setLoading(true);
         setError(null);
@@ -45,7 +43,6 @@ const DirectEventsPage: React.FC = () => {
                 ? '/.netlify/functions/get-events?refresh=true'
                 : '/.netlify/functions/get-events';
 
-            console.log(`Fetching events from ${url}`);
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -53,7 +50,6 @@ const DirectEventsPage: React.FC = () => {
             }
 
             const data = await response.json();
-            console.log('Response:', data);
 
             if (!data.success) {
                 throw new Error(data.error || 'Failed to fetch events');
@@ -71,7 +67,6 @@ const DirectEventsPage: React.FC = () => {
             console.error('Error fetching events:', error);
             setError(error instanceof Error ? error.message : 'Unknown error');
 
-            // Try test endpoint as fallback
             try {
                 const testResponse = await fetch('/.netlify/functions/test-events');
                 if (testResponse.ok) {
@@ -91,25 +86,6 @@ const DirectEventsPage: React.FC = () => {
         }
     };
 
-    // Format date for display
-    const formatDate = (dateString: string): string => {
-        try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) {
-                return dateString;
-            }
-            return new Intl.DateTimeFormat('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'long'
-            }).format(date);
-        } catch (e) {
-            return dateString;
-        }
-    };
-
-    // Handle refresh (pull down to refresh)
     const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
         try {
             await fetchEvents(true);
@@ -118,7 +94,6 @@ const DirectEventsPage: React.FC = () => {
         }
     };
 
-    // Manual update
     const handleManualUpdate = async () => {
         try {
             await fetchEvents(true);
@@ -127,16 +102,13 @@ const DirectEventsPage: React.FC = () => {
         }
     };
 
-    // Try direct API call for debugging
     const handleDebug = async () => {
         setToastMessage('Checking API status...');
         setShowToast(true);
 
         try {
-            // Try the test endpoint first
             const testResponse = await fetch('/.netlify/functions/test-events');
             const testData = await testResponse.json();
-            console.log('Test endpoint response:', testData);
 
             if (testData.events && testData.events.length > 0) {
                 setEvents(testData.events);
@@ -146,10 +118,8 @@ const DirectEventsPage: React.FC = () => {
                 return;
             }
 
-            // Then try the regular endpoint with refresh
             const response = await fetch('/.netlify/functions/get-events?refresh=true');
             const data = await response.json();
-            console.log('Regular endpoint response:', data);
 
             if (data.events && data.events.length > 0) {
                 setEvents(data.events);
@@ -167,12 +137,10 @@ const DirectEventsPage: React.FC = () => {
         }
     };
 
-    // Initial load
     useEffect(() => {
         fetchEvents();
     }, []);
 
-    // Filter events based on search text
     const filteredEvents = events.filter(event => {
         if (!searchText) return true;
         const searchLower = searchText.toLowerCase();
@@ -184,11 +152,10 @@ const DirectEventsPage: React.FC = () => {
         );
     });
 
-    // Sort events by date
     const sortedEvents = [...filteredEvents].sort((a, b) => {
         const dateA = new Date(a.date).getTime() || 0;
         const dateB = new Date(b.date).getTime() || 0;
-        return dateA - dateB; // Ascending order
+        return dateA - dateB;
     });
 
     return (
@@ -207,7 +174,6 @@ const DirectEventsPage: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                {/* Status info */}
                 <div className="ion-padding">
                     <p>
                         <strong>Status:</strong> {loading ? 'Loading...' : 'Ready'} |
@@ -216,22 +182,18 @@ const DirectEventsPage: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Pull to refresh */}
                 <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
                     <IonRefresherContent></IonRefresherContent>
                 </IonRefresher>
 
-                {/* Search */}
                 <IonSearchbar
                     value={searchText}
                     onIonChange={e => setSearchText(e.detail.value || '')}
                     placeholder="Search events..."
                 />
 
-                {/* Loading state */}
                 <IonLoading isOpen={loading} message="Loading events..." />
 
-                {/* Error state */}
                 {error && (
                     <div className="ion-padding ion-text-center">
                         <h3>Error loading events</h3>
@@ -240,7 +202,6 @@ const DirectEventsPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* No events */}
                 {!loading && !error && sortedEvents.length === 0 && (
                     <div className="ion-padding ion-text-center">
                         <h3>No events found</h3>
@@ -249,7 +210,6 @@ const DirectEventsPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* Event list */}
                 {!loading && sortedEvents.length > 0 && (
                     <div className="ion-padding">
                         <IonList>
@@ -260,8 +220,8 @@ const DirectEventsPage: React.FC = () => {
                                             <IonIcon icon={calendar} /> {formatDate(event.date)}
                                             {event.venue && (
                                                 <span>
-                          <IonIcon icon={location} /> {event.venue}
-                        </span>
+                                                    <IonIcon icon={location} /> {event.venue}
+                                                </span>
                                             )}
                                         </IonCardSubtitle>
                                         <IonCardTitle>{event.title}</IonCardTitle>
@@ -275,7 +235,6 @@ const DirectEventsPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* Toast notifications */}
                 <IonToast
                     isOpen={showToast}
                     onDidDismiss={() => setShowToast(false)}

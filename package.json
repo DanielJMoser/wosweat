@@ -14,7 +14,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@angular/common": "^19.2.10",
     "@capacitor/app": "7.0.1",
     "@capacitor/core": "7.2.0",
     "@capacitor/haptics": "7.0.1",
@@ -28,8 +27,6 @@
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.9.0",
     "cheerio": "^1.0.0",
-    "date-fns": "^4.1.0",
-    "ics": "^3.8.1",
     "ionicons": "^7.4.0",
     "puppeteer": "^24.8.2",
     "react": "19.0.0",

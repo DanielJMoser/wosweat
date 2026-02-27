@@ -3,7 +3,6 @@ import { getStoredEvents, scrapeEvents, storeEvents } from './utils/scraper-util
 import { EventData } from '../../shared/types/events';
 
 export const handler: Handler = async (event) => {
-    // Set CORS headers
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -12,7 +11,6 @@ export const handler: Handler = async (event) => {
         'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
     };
 
-    // Handle OPTIONS request
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
@@ -22,15 +20,11 @@ export const handler: Handler = async (event) => {
     }
 
     try {
-        // Log query parameters for debugging
         console.log('Query parameters:', event.queryStringParameters);
 
-        // Force a refresh if the force parameter is set to true
         const forceRefresh = event.queryStringParameters?.refresh === 'true';
 
-        // Skip cache and test mode if we're forcing a refresh
         if (!forceRefresh) {
-            // Check if we're in test mode
             if (event.queryStringParameters?.test === 'true') {
                 console.log('Running in test mode with sample events');
                 const sampleEvents = generateSampleEvents();
@@ -49,7 +43,6 @@ export const handler: Handler = async (event) => {
                 };
             }
 
-            // Try to get cached events first (if not forcing a refresh)
             const cachedEvents = await getStoredEvents();
             if (cachedEvents.length > 0) {
                 console.log(`Using ${cachedEvents.length} cached events`);
@@ -74,7 +67,6 @@ export const handler: Handler = async (event) => {
 
         console.log('Fetching fresh events data');
 
-        // Attempt to scrape events from the target sites
         const targetSites = [
             'https://www.treibhaus.at/programm',
             'https://pmk.or.at/de/events/',
@@ -85,7 +77,6 @@ export const handler: Handler = async (event) => {
 
         let allEvents: EventData[] = [];
 
-        // Try each site in sequence
         for (const site of targetSites) {
             try {
                 console.log(`Attempting to scrape ${site}`);
@@ -100,24 +91,22 @@ export const handler: Handler = async (event) => {
 
         console.log(`Retrieved a total of ${allEvents.length} events from all sites`);
 
-        // Filter out past events (keep only today and future events)
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        today.setHours(0, 0, 0, 0);
         
         const currentEvents = allEvents.filter(event => {
             try {
                 const eventDate = new Date(event.date);
-                eventDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
+                eventDate.setHours(0, 0, 0, 0);
                 return eventDate >= today;
             } catch (error) {
                 console.warn(`Invalid date format for event: ${event.title}, date: ${event.date}`);
-                return false; // Exclude events with invalid dates
+                return false;
             }
         });
 
         console.log(`Filtered to ${currentEvents.length} current/future events (removed ${allEvents.length - currentEvents.length} past events)`);
 
-        // Store events for future use if we found any
         if (currentEvents.length > 0) {
             try {
                 await storeEvents(currentEvents);
@@ -126,7 +115,6 @@ export const handler: Handler = async (event) => {
                 console.error('Failed to store events:', storageError);
             }
 
-            // Return the current events we found
             return {
                 statusCode: 200,
                 headers,
@@ -164,7 +152,7 @@ export const handler: Handler = async (event) => {
         const sampleEvents = generateSampleEvents();
 
         return {
-            statusCode: 200, // Return 200 to avoid breaking the frontend
+            statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
@@ -179,7 +167,6 @@ export const handler: Handler = async (event) => {
     }
 };
 
-// Generate sample events for testing or as fallback
 function generateSampleEvents() {
     const today = new Date();
     const tomorrow = new Date(today);

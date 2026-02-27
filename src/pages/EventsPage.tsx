@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, RefCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, RefCallback } from 'react';
 import {
     IonContent,
     IonHeader,
@@ -18,91 +18,15 @@ import {
     RefresherEventDetail,
     IonLoading,
     IonIcon,
-    IonRow,
-    IonCol,
-    IonGrid,
 } from '@ionic/react';
-import { refresh, calendar, locate, link, bug } from 'ionicons/icons';
+import { refresh, calendar, locate, link } from 'ionicons/icons';
 import { useEvents } from '../context/EventsContext';
-import { EventService } from '../services/events-service';
-import { EventData } from '../../shared/types/events';
 import { useDebugMode } from '../hooks/useDebugMode';
 import { DebugPanel } from '../components/DebugPanel';
 import { GlassCard } from '../components/GlassCard/GlassCard';
 import { DebugInfo } from '../types/ui';
+import { formatDate, getShortDate, getDayName, groupEventsByDay, isToday } from '../utils/date-utils';
 import './EventsPage.scss';
-
-// Helper function to format dates
-const formatDate = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) {
-            return dateString; // If parsing fails, return the original string
-        }
-        return new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        }).format(date);
-    } catch {
-        return dateString;
-    }
-};
-
-// Helper function to get short date for navigation
-const getShortDate = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) {
-            return dateString;
-        }
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-        }).format(date);
-    } catch {
-        return dateString;
-    }
-};
-
-// Helper function to get day name
-const getDayName = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) {
-            return '';
-        }
-        return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date);
-    } catch {
-        return '';
-    }
-};
-
-// Helper function to group events by day
-const groupEventsByDay = (events: EventData[]): { [key: string]: EventData[] } => {
-    return events.reduce((groups: { [key: string]: EventData[] }, event) => {
-        // Use only the date part for grouping (YYYY-MM-DD)
-        const dateKey = event.date.split('T')[0];
-
-        if (!groups[dateKey]) {
-            groups[dateKey] = [];
-        }
-
-        groups[dateKey].push(event);
-        return groups;
-    }, {});
-};
-
-// Check if a date is today
-const isToday = (dateString: string): boolean => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const date = new Date(dateString);
-    date.setHours(0, 0, 0, 0);
-
-    return date.getTime() === today.getTime();
-};
 
 const EventsPage: React.FC = () => {
     const { state, fetchEvents, triggerUpdate } = useEvents();
@@ -111,32 +35,47 @@ const EventsPage: React.FC = () => {
     const [toastMessage, setToastMessage] = useState<string>('');
     const [searchText, setSearchText] = useState<string>('');
     const [showLoading, setShowLoading] = useState<boolean>(false);
-    const [debugInfo, setDebugInfo] = useState<string>('');
     const [activeDayId, setActiveDayId] = useState<string | null>(null);
 
-    // Refs for each day section for scrolling
     const daySectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-    // Create debug info object
     const debugInfoObj: DebugInfo = {
         eventsCount: state.events.length,
         lastUpdated: state.lastUpdated,
-        cacheStatus: 'hit', // This would be determined by the service
+        cacheStatus: 'hit',
         loadingState: state.loading,
         errorMessage: state.error || undefined
     };
 
-    // Debug effect - log state changes
-    useEffect(() => {
-        console.log('Events state updated:', state);
-        setDebugInfo(`Events: ${state.events.length}, Loading: ${state.loading}, Error: ${state.error}, Last updated: ${state.lastUpdated?.toLocaleString() || 'never'}`);
-    }, [state]);
+    const { sortedEvents, eventsByDay, sortedDays } = useMemo(() => {
+        const filtered = state.events.filter(event => {
+            if (!searchText) return true;
+            const searchLower = searchText.toLowerCase();
+            return (
+                event.title.toLowerCase().includes(searchLower) ||
+                event.description.toLowerCase().includes(searchLower) ||
+                (event.venue && event.venue.toLowerCase().includes(searchLower))
+            );
+        });
 
-    // Handle refresh (pull-to-refresh)
+        const sorted = [...filtered].sort((a, b) => {
+            const dateA = new Date(a.date).getTime() || 0;
+            const dateB = new Date(b.date).getTime() || 0;
+            return dateA - dateB;
+        });
+
+        const grouped = groupEventsByDay(sorted);
+
+        const days = Object.keys(grouped).sort((a, b) =>
+            new Date(a).getTime() - new Date(b).getTime()
+        );
+
+        return { sortedEvents: sorted, eventsByDay: grouped, sortedDays: days };
+    }, [state.events, searchText]);
+
     const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
         try {
-            console.log('Pull-to-refresh triggered');
-            await fetchEvents(true); // Force refresh from API
+            await fetchEvents(true);
             setToastMessage('Events refreshed successfully');
             setShowToast(true);
         } catch (error) {
@@ -148,9 +87,7 @@ const EventsPage: React.FC = () => {
         }
     };
 
-    // Handle manual update
     const handleManualUpdate = async () => {
-        console.log('Manual update button clicked');
         setShowLoading(true);
         try {
             await triggerUpdate();
@@ -165,15 +102,13 @@ const EventsPage: React.FC = () => {
         }
     };
 
-    // Create a ref callback function with proper TypeScript types
     const createRefCallback = (dayId: string): RefCallback<HTMLDivElement> => {
         return (element) => {
             daySectionRefs.current[dayId] = element;
-            return undefined; // Fixed: Return void, not HTMLDivElement | null
+            return undefined;
         };
     };
 
-    // Scroll to a day section
     const scrollToDay = (dayId: string) => {
         setActiveDayId(dayId);
         const element = daySectionRefs.current[dayId];
@@ -182,50 +117,15 @@ const EventsPage: React.FC = () => {
         }
     };
 
-    // Filter events based on search text
-    const filteredEvents = state.events.filter(event => {
-        if (!searchText) return true;
-        const searchLower = searchText.toLowerCase();
-
-        return (
-            event.title.toLowerCase().includes(searchLower) ||
-            event.description.toLowerCase().includes(searchLower) ||
-            (event.venue && event.venue.toLowerCase().includes(searchLower))
-        );
-    });
-
-    // Sort events by date (most recent first)
-    const sortedEvents = [...filteredEvents].sort((a, b) => {
-        const dateA = new Date(a.date).getTime() || 0;
-        const dateB = new Date(b.date).getTime() || 0;
-
-        return dateA - dateB; // Ascending order (upcoming events first)
-    });
-
-    // Group events by day
-    const eventsByDay = groupEventsByDay(sortedEvents);
-
-    // Sort days chronologically
-    const sortedDays = Object.keys(eventsByDay).sort((a, b) => {
-        return new Date(a).getTime() - new Date(b).getTime();
-    });
-
-    // Set active day to first day or today if present
     useEffect(() => {
         if (sortedDays.length > 0) {
-            // Try to find today in the sorted days
             const today = sortedDays.find(day => isToday(day));
-            if (today) {
-                setActiveDayId(today);
-            } else {
-                setActiveDayId(sortedDays[0]);
-            }
+            setActiveDayId(today ?? sortedDays[0]);
         }
     }, [sortedDays]);
 
     return (
         <IonPage>
-            {/* Background Layer Container */}
             <div className="background-layer">
                 <svg className="grain-filter" aria-hidden="true">
                     <filter id="grain">
@@ -252,12 +152,10 @@ const EventsPage: React.FC = () => {
             </IonHeader>
 
             <IonContent className="transparent-content" style={{ position: 'relative', zIndex: 50 }}>
-                {/* Pull-to-refresh */}
                 <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
                     <IonRefresherContent></IonRefresherContent>
                 </IonRefresher>
 
-                {/* Search bar */}
                 <div className="search-container">
                     <IonSearchbar
                         className="custom-searchbar"
@@ -268,37 +166,6 @@ const EventsPage: React.FC = () => {
                     />
                 </div>
 
-                {/* Debug info - hidden unless debug mode active */}
-                {isDebugMode && (
-                <div className="ion-padding">
-                    <IonGrid>
-                        <IonRow>
-                            <IonCol>
-                                <div className="debug-info">
-                                    {debugInfo}
-                                </div>
-                            </IonCol>
-                            <IonCol size="auto">
-                                <IonButton size="small" className="debug-button" onClick={async () => {
-                                    console.log('Debug button clicked');
-                                    try {
-                                        await EventService.debugFetchEvents();
-                                        setToastMessage('Check console for debug info');
-                                        setShowToast(true);
-                                    } catch (error) {
-                                        console.error('Debug error:', error);
-                                    }
-                                }}>
-                                    <IonIcon slot="start" icon={bug} />
-                                    Debug
-                                </IonButton>
-                            </IonCol>
-                        </IonRow>
-                    </IonGrid>
-                </div>
-                )}
-
-                {/* Day navigation */}
                 {!state.loading && sortedDays.length > 0 && (
                     <div className="day-nav">
                         {sortedDays.map(day => (
@@ -314,7 +181,6 @@ const EventsPage: React.FC = () => {
                 )}
 
                 <div className="events-container">
-                    {/* Loading skeletons */}
                     {state.loading && (
                         <div className="events-grid">
                             {Array.from({ length: 3 }).map((_, i) => (
@@ -336,7 +202,6 @@ const EventsPage: React.FC = () => {
                         </div>
                     )}
 
-                    {/* No events found */}
                     {!state.loading && sortedEvents.length === 0 && !state.error && (
                         <div className="no-events-container">
                             <h2 className="neon-text">No events found</h2>
@@ -351,7 +216,6 @@ const EventsPage: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Error state */}
                     {!state.loading && state.error && (
                         <div className="no-events-container">
                             <h2 className="neon-text">Error loading events</h2>
@@ -360,7 +224,6 @@ const EventsPage: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Events grouped by day */}
                     {!state.loading && sortedEvents.length > 0 && (
                         <div>
                             {sortedDays.map(day => (
@@ -415,7 +278,6 @@ const EventsPage: React.FC = () => {
                     )}
                 </div>
 
-                {/* Toast notification */}
                 <IonToast
                     isOpen={showToast}
                     onDidDismiss={() => setShowToast(false)}
@@ -424,7 +286,6 @@ const EventsPage: React.FC = () => {
                     position="bottom"
                 />
 
-                {/* Loading overlay */}
                 <IonLoading
                     isOpen={showLoading}
                     message="Updating events..."
@@ -432,8 +293,6 @@ const EventsPage: React.FC = () => {
                 />
             </IonContent>
 
-
-            {/* Debug Panel - activated by Ctrl+Shift+D */}
             <DebugPanel
                 visible={isDebugMode}
                 debugInfo={debugInfoObj}

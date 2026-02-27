@@ -7,33 +7,12 @@ export interface GlassCardProps {
   target?: string;
 }
 
-export interface AnimationConfig {
-  intensity: number;
-  speed: number;
-  particleCount: number;
-  mouseInfluence: number;
-  gravityStrength?: number;
-  maxGravityDistance?: number;
-}
-
-export interface MousePosition {
-  x: number;
-  y: number;
-}
-
 export interface DebugInfo {
   eventsCount: number;
   lastUpdated: Date | null;
   cacheStatus: 'hit' | 'miss' | 'expired';
   loadingState: boolean;
   errorMessage?: string;
-}
-
-export interface HeaderProps {
-  title: string;
-  onRefresh?: () => void;
-  isLoading?: boolean;
-  className?: string;
 }
 
 export interface DebugPanelProps {

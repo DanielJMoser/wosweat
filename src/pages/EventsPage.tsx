@@ -28,7 +28,6 @@ import { EventService } from '../services/events-service';
 import { EventData } from '../../shared/types/events';
 import { useDebugMode } from '../hooks/useDebugMode';
 import { DebugPanel } from '../components/DebugPanel';
-import { AnimatedMesh } from '../components/AnimatedMesh';
 import { GlassCard } from '../components/GlassCard/GlassCard';
 import { DebugInfo } from '../types/ui';
 import './EventsPage.scss';
@@ -228,18 +227,13 @@ const EventsPage: React.FC = () => {
         <IonPage>
             {/* Background Layer Container */}
             <div className="background-layer">
-                {/* Animated Mesh Background - Enhanced for glassmorphism */}
-                <AnimatedMesh config={{ particleCount: 15, intensity: 0.6, speed: 1.5 }} />
-                
-                {/* Vaporwave background elements */}
-                <div className="stars"></div>
-                <div className="horizon-lines"></div>
-{/*
-                <div className="vaporwave-sun"></div>
-*/}
-
-                {/* Additional glassmorphism enhancement overlay */}
-                <div className="glass-enhancement-overlay"></div>
+                <svg className="grain-filter" aria-hidden="true">
+                    <filter id="grain">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+                        <feColorMatrix type="saturate" values="0" />
+                    </filter>
+                    <rect width="100%" height="100%" filter="url(#grain)" />
+                </svg>
             </div>
 
             <IonHeader style={{ position: 'relative', zIndex: 100 }}>

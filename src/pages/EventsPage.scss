@@ -14,84 +14,51 @@ ion-page {
 
 // Additional transparency rules to ensure background visibility
 .events-container {
-    background: transparent; // Ensure no background blocks the animated mesh
+    background: transparent;
 }
 
-// Background Layer Container for Enhanced Glassmorphism
+// Background Layer — grain texture + slow-drifting Catppuccin gradient
 .background-layer {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 1; // Increased to be above page background but below content
+    z-index: 1;
     pointer-events: none;
     overflow: hidden;
-    
-    // Create a more dynamic background for glassmorphism
-    background: 
-        radial-gradient(ellipse at 20% 80%, rgba(255, 107, 157, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(18, 194, 233, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 40% 40%, rgba(196, 113, 237, 0.1) 0%, transparent 50%),
-        linear-gradient(135deg, 
-            var(--ion-color-crust) 0%, 
-            var(--ion-color-mantle) 40%,
-            var(--ion-color-surface0) 80%,
-            var(--ion-color-surface1) 100%
-        );
-    
-    // Ensure AnimatedMesh is positioned correctly within background layer
-    .animated-mesh {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        z-index: 10 !important; // Above other background elements
-    }
+    background:
+        radial-gradient(ellipse at 20% 80%, rgba(243, 139, 168, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(137, 180, 250, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(203, 166, 247, 0.08) 0%, transparent 60%),
+        var(--ion-color-crust);
+    background-size: 200% 200%, 200% 200%, 200% 200%, auto;
+    animation: gradient-drift 30s ease-in-out infinite alternate;
 }
 
-// Glass Enhancement Overlay
-.glass-enhancement-overlay {
+.grain-filter {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 5; // Below AnimatedMesh
-    background: 
-        repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 2px,
-            rgba(255, 255, 255, 0.03) 2px,
-            rgba(255, 255, 255, 0.03) 4px
-        ),
-        repeating-linear-gradient(
-            -45deg,
-            transparent,
-            transparent 2px,
-            rgba(255, 107, 157, 0.02) 2px,
-            rgba(255, 107, 157, 0.02) 4px
-        );
-    mix-blend-mode: overlay;
-    animation: shimmer 20s linear infinite;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    opacity: 0.04;
+    pointer-events: none;
 }
 
-@keyframes shimmer {
-    0% { transform: translateX(-10px) translateY(-10px); }
-    50% { transform: translateX(10px) translateY(5px); }
-    100% { transform: translateX(-10px) translateY(-10px); }
+@keyframes gradient-drift {
+    0% {
+        background-position: 0% 0%, 100% 100%, 50% 50%;
+    }
+    100% {
+        background-position: 30% 20%, 70% 80%, 40% 60%;
+    }
 }
 
 // Grid and background variables
 $grid-size: 50px;
 $grid-color: rgba(203, 166, 247, 0.1); // Mauve with low opacity
 $grid-accent: rgba(245, 194, 231, 0.12); // Pink with low opacity
-$horizon-color-1: rgba(137, 180, 250, 0.5); // Blue
-$horizon-color-2: rgba(203, 166, 247, 0.5); // Mauve
-$horizon-color-3: rgba(243, 139, 168, 0.5); // Red
-
 // Mixin for neon text effect
 @mixin neon-text($color) {
     color: $color;
@@ -123,104 +90,6 @@ $horizon-color-3: rgba(243, 139, 168, 0.5); // Red
         transform-origin: center bottom;
         transform: perspective(500px) rotateX(30deg);
         pointer-events: none;
-    }
-}
-
-// Vaporwave sun - enhanced for glassmorphism
-.vaporwave-sun {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 300px;
-    background: radial-gradient(
-                    ellipse at center bottom,
-                    rgba(245, 194, 231, 0.8) 0%,
-                    rgba(243, 139, 168, 0.6) 40%,
-                    rgba(203, 166, 247, 0.4) 60%,
-                    rgba(17, 17, 27, 0) 80%
-    );
-    z-index: 1; // Below AnimatedMesh
-    pointer-events: none;
-    filter: blur(1px); // Subtle blur to enhance glass effect
-}
-
-// Horizontal lines (horizon) - enhanced for glassmorphism
-.horizon-lines {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 40%;
-    z-index: 2; // Below AnimatedMesh
-    pointer-events: none;
-    background: repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 20px,
-                    $horizon-color-1 20px,
-                    $horizon-color-1 21px,
-                    transparent 21px,
-                    transparent 40px,
-                    $horizon-color-2 40px,
-                    $horizon-color-2 41px,
-                    transparent 41px,
-                    transparent 60px,
-                    $horizon-color-3 60px,
-                    $horizon-color-3 61px,
-                    transparent 61px,
-                    transparent 80px
-    );
-    opacity: 0.25; // Increased for better glass contrast
-    mix-blend-mode: overlay;
-}
-
-// Stars - enhanced for glassmorphism
-.stars {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-    z-index: 3; // Below AnimatedMesh
-    pointer-events: none;
-
-    &::before, &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image:
-                radial-gradient(1px 1px at 10px 10px, var(--ion-color-light) 50%, transparent 100%),
-                radial-gradient(1px 1px at 20px 50px, var(--ion-color-light) 50%, transparent 100%),
-                radial-gradient(1px 1px at 30px 100px, var(--ion-color-subtext0) 50%, transparent 100%),
-                radial-gradient(1px 1px at 40px 30px, var(--ion-color-subtext1) 50%, transparent 100%),
-                radial-gradient(2px 2px at 60px 200px, var(--ion-color-light) 50%, transparent 100%),
-                radial-gradient(2px 2px at 100px 100px, var(--ion-color-subtext0) 50%, transparent 100%),
-                radial-gradient(1px 1px at 150px 50px, var(--ion-color-light) 50%, transparent 100%),
-                radial-gradient(1px 1px at 200px 150px, var(--ion-color-subtext1) 50%, transparent 100%);
-        background-repeat: repeat;
-        background-size: 250px 250px;
-        opacity: 0.3;
-        animation: glimmer 120s linear infinite;
-    }
-
-    &::after {
-        background-size: 200px 200px;
-        animation-direction: reverse;
-        animation-duration: 180s;
-    }
-}
-
-@keyframes glimmer {
-    0% {
-        transform: translateY(0);
-    }
-    100% {
-        transform: translateY(-250px);
     }
 }
 
@@ -649,6 +518,13 @@ ion-skeleton-text {
     &.active {
         background-color: var(--ion-color-primary);
         color: var(--ion-color-primary-contrast);
+    }
+}
+
+// Respect reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+    .background-layer {
+        animation: none;
     }
 }
 

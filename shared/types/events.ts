@@ -1,7 +1,7 @@
 export interface EventData {
     id: string;
     title: string;
-    date: string; // ISO format date string
+    date: string;
     description: string;
     url: string;
     venue?: string;

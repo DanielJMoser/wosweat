@@ -1,1 +1,0 @@
-export { AnimatedMesh } from './AnimatedMesh';

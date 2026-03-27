@@ -11,12 +11,7 @@
   }
 }
 
-.event-grid__card {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: cardIn 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
-  animation-delay: calc(var(--card-index) * 0.05s);
-}
+.event-grid__card {}
 
 .event-grid__card--featured {
   grid-column: 1 / -1;
@@ -26,13 +21,6 @@
   .event-grid__card--featured {
     grid-column: 1 / 3;
     grid-row: 1 / 3;
-  }
-}
-
-@keyframes cardIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 

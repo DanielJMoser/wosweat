@@ -1,6 +1,11 @@
+import { useEffect } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { EventData } from '../../../shared/types/events';
 import EventCard from './EventCard';
 import './EventGrid.css';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface EventGridProps {
   events: EventData[];
@@ -15,6 +20,36 @@ function getFeaturedIndex(events: EventData[]): number {
 const SKELETON_COUNT = 6;
 
 const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
+  useEffect(() => {
+    if (events.length === 0) return;
+
+    const timer = setTimeout(() => {
+      const cards = document.querySelectorAll('.event-grid__card');
+      cards.forEach((card, i) => {
+        gsap.fromTo(card,
+          { y: 20, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.5,
+            delay: i * 0.05,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 90%',
+              once: true
+            }
+          }
+        );
+      });
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, [events]);
+
   if (loading) {
     return (
       <div className="event-grid">
@@ -42,7 +77,6 @@ const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
           <div
             key={event.id}
             className={`event-grid__card${isFeatured ? ' event-grid__card--featured' : ''}`}
-            style={{ '--card-index': i } as React.CSSProperties}
           >
             <EventCard event={event} featured={isFeatured} />
           </div>

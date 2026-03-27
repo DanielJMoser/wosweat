@@ -2,6 +2,7 @@ import { IonApp, IonContent } from '@ionic/react';
 import { setupIonicReact } from '@ionic/react';
 import { useEvents } from './hooks/useEvents';
 import Header from './components/Header';
+import DateStrip from './components/DateStrip';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -26,11 +27,16 @@ import './theme/variables.css';
 setupIonicReact({ mode: 'md' });
 
 const App: React.FC = () => {
-  const { events, loading, error } = useEvents();
+  const { events, loading, error, selectedDate, setSelectedDate } = useEvents();
 
   return (
     <IonApp>
       <Header onVenueListClick={() => {}} />
+      <DateStrip
+        selectedDate={selectedDate}
+        onDateSelect={setSelectedDate}
+        onToggleMonthGrid={() => {}}
+      />
       <IonContent>
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
           <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ctp-subtext0)' }}>

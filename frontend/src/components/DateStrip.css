@@ -1,0 +1,98 @@
+.date-strip {
+  background: var(--ctp-mantle);
+  border-bottom: 1px solid var(--ctp-surface0);
+  padding: 8px 0;
+}
+
+.date-strip-inner {
+  display: flex;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 10px;
+  gap: 6px;
+}
+
+.date-strip-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  flex: 1;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.date-strip-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.date-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: var(--ctp-surface0);
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.date-pill-day {
+  font-family: var(--font-body);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ctp-text);
+  line-height: 1;
+}
+
+.date-pill-num {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ctp-text);
+  line-height: 1.3;
+}
+
+.date-pill--past .date-pill-day,
+.date-pill--past .date-pill-num {
+  color: var(--ctp-overlay0);
+}
+
+.date-pill--selected {
+  border-color: var(--ctp-teal);
+}
+
+.date-pill--today-selected {
+  background: var(--ctp-teal);
+  border-color: var(--ctp-teal);
+}
+
+.date-pill--today-selected .date-pill-day,
+.date-pill--today-selected .date-pill-num {
+  color: var(--ctp-base);
+  font-weight: 800;
+}
+
+.date-strip-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--ctp-subtext0);
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.date-strip-chevron:hover {
+  color: var(--ctp-teal);
+}

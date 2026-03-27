@@ -1,5 +1,7 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { EventData } from '../../../shared/types/events';
 import { getVenueConfig } from '../config/venues';
+import QuickPeek from './QuickPeek';
 import './EventCard.css';
 
 interface EventCardProps {
@@ -8,21 +10,100 @@ interface EventCardProps {
   onClick?: () => void;
 }
 
+const LONG_PRESS_MS = 500;
+const MOVE_THRESHOLD = 10;
+
 const EventCard: React.FC<EventCardProps> = ({ event, featured, onClick }) => {
   const venue = getVenueConfig(event.venue);
   const isAlt = venue.accent === 'lavender';
   const hasImage = !!event.imageUrl;
 
+  const [showPeek, setShowPeek] = useState(false);
+  const preventClick = useRef(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const hidePeek = useCallback(() => {
+    setShowPeek(false);
+    preventClick.current = false;
+  }, []);
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!showPeek) return;
+
+    const dismiss = (e: Event) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        hidePeek();
+      }
+    };
+
+    const dismissBack = () => hidePeek();
+
+    document.addEventListener('click', dismiss, true);
+    document.addEventListener('ionBackButton', dismissBack);
+
+    return () => {
+      document.removeEventListener('click', dismiss, true);
+      document.removeEventListener('ionBackButton', dismissBack);
+    };
+  }, [showPeek, hidePeek]);
+
+  useEffect(() => {
+    return cancelLongPress;
+  }, []);
+
   const handleClick = () => {
+    if (preventClick.current) {
+      preventClick.current = false;
+      return;
+    }
     if (onClick) return onClick();
     window.open(event.url, '_blank', 'noopener');
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+    longPressTimer.current = setTimeout(() => {
+      setShowPeek(true);
+      preventClick.current = true;
+    }, LONG_PRESS_MS);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStart.current.x;
+    const dy = touch.clientY - touchStart.current.y;
+    if (Math.sqrt(dx * dx + dy * dy) > MOVE_THRESHOLD) {
+      cancelLongPress();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    cancelLongPress();
+    touchStart.current = null;
+  };
+
   return (
     <div
+      ref={cardRef}
       className={`event-card${featured ? ' event-card--featured' : ''}`}
       style={!hasImage ? { background: venue.gradient } : undefined}
       onClick={handleClick}
+      onMouseEnter={() => setShowPeek(true)}
+      onMouseLeave={hidePeek}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {hasImage ? (
         <img
@@ -58,6 +139,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, featured, onClick }) => {
           </div>
         )}
       </div>
+
+      <QuickPeek event={event} visible={showPeek} />
     </div>
   );
 };

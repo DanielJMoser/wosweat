@@ -1,5 +1,6 @@
 import { IonApp, IonContent } from '@ionic/react';
 import { setupIonicReact } from '@ionic/react';
+import { useEvents } from './hooks/useEvents';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -23,15 +24,21 @@ import './theme/variables.css';
 
 setupIonicReact({ mode: 'md' });
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonContent>
-      <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
-        <p style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, color: 'var(--ctp-text)', paddingTop: '2rem' }}>wosweat</p>
-        <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ctp-subtext0)' }}>Shell loaded — components coming next.</p>
-      </main>
-    </IonContent>
-  </IonApp>
-);
+const App: React.FC = () => {
+  const { events, loading, error } = useEvents();
+
+  return (
+    <IonApp>
+      <IonContent>
+        <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, color: 'var(--ctp-text)', paddingTop: '2rem' }}>wosweat</p>
+          <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ctp-subtext0)' }}>
+            {error ? `Error: ${error}` : loading ? 'Loading...' : `${events.length} events loaded`}
+          </p>
+        </main>
+      </IonContent>
+    </IonApp>
+  );
+};
 
 export default App;

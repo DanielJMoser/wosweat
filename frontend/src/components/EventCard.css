@@ -1,0 +1,136 @@
+.event-card {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 3/4;
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.event-card:hover {
+  transform: scale(1.02);
+}
+
+.event-card:hover .event-card__hover {
+  opacity: 1;
+}
+
+.event-card--featured {
+  aspect-ratio: 16/7;
+}
+
+.event-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.event-card__initial {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 5rem;
+  color: rgba(148, 226, 213, 0.08);
+  line-height: 1;
+  user-select: none;
+  z-index: 0;
+}
+
+.event-card__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(17, 17, 27, 0.92) 0%, rgba(17, 17, 27, 0.4) 40%, transparent 65%);
+  z-index: 1;
+}
+
+.event-card__hover {
+  position: absolute;
+  inset: 0;
+  background: rgba(148, 226, 213, 0.08);
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.event-card__content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  z-index: 3;
+}
+
+.event-card__venue {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ctp-teal);
+  margin-bottom: 6px;
+}
+
+.event-card__venue--alt {
+  color: var(--ctp-lavender);
+}
+
+.event-card__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.15;
+  color: var(--ctp-text);
+  margin-bottom: 8px;
+}
+
+.event-card--featured .event-card__title {
+  font-size: 1.5rem;
+}
+
+.event-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-card__time {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.7rem;
+  background: var(--ctp-teal);
+  color: var(--ctp-crust);
+  border-radius: 3px;
+  padding: 2px 8px;
+  line-height: 1.4;
+}
+
+.event-card__time--alt {
+  background: var(--ctp-lavender);
+}
+
+.event-card__tag {
+  font-size: 0.6rem;
+  font-weight: 600;
+  background: var(--ctp-surface1);
+  backdrop-filter: blur(8px);
+  color: var(--ctp-subtext0);
+  border-radius: 3px;
+  padding: 2px 8px;
+  line-height: 1.4;
+}
+
+@media (min-width: 640px) {
+  .event-card--featured .event-card__title {
+    font-size: 1.8rem;
+  }
+
+  .event-card--featured {
+    aspect-ratio: unset;
+    height: 100%;
+  }
+}

@@ -3,6 +3,7 @@ import { setupIonicReact } from '@ionic/react';
 import { useEvents } from './hooks/useEvents';
 import Header from './components/Header';
 import DateStrip from './components/DateStrip';
+import DateHeading from './components/DateHeading';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -27,7 +28,7 @@ import './theme/variables.css';
 setupIonicReact({ mode: 'md' });
 
 const App: React.FC = () => {
-  const { events, loading, error, selectedDate, setSelectedDate } = useEvents();
+  const { selectedDate, setSelectedDate } = useEvents();
 
   return (
     <IonApp>
@@ -39,9 +40,7 @@ const App: React.FC = () => {
       />
       <IonContent>
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
-          <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ctp-subtext0)' }}>
-            {error ? `Error: ${error}` : loading ? 'Loading...' : `${events.length} events loaded`}
-          </p>
+          <DateHeading date={selectedDate} />
         </main>
       </IonContent>
     </IonApp>

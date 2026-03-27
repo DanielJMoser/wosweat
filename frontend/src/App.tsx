@@ -8,6 +8,7 @@ import MonthGrid from './components/MonthGrid';
 import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
 import VenueList from './components/VenueList';
+import AccessibilityFab from './components/AccessibilityFab';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -68,6 +69,7 @@ const App: React.FC = () => {
           <VenueList isOpen={venueListOpen} onToggle={() => setVenueListOpen(v => !v)} />
         </div>
       </IonContent>
+      <AccessibilityFab />
     </IonApp>
   );
 };

@@ -1,6 +1,7 @@
 import { IonApp, IonContent } from '@ionic/react';
 import { setupIonicReact } from '@ionic/react';
 import { useEvents } from './hooks/useEvents';
+import Header from './components/Header';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -29,9 +30,9 @@ const App: React.FC = () => {
 
   return (
     <IonApp>
+      <Header onVenueListClick={() => {}} />
       <IonContent>
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, color: 'var(--ctp-text)', paddingTop: '2rem' }}>wosweat</p>
           <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ctp-subtext0)' }}>
             {error ? `Error: ${error}` : loading ? 'Loading...' : `${events.length} events loaded`}
           </p>

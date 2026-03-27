@@ -6,110 +6,98 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 wosweat is an event tracking Progressive Web App built with Ionic React that aggregates events from multiple Innsbruck venues. It features a serverless backend using Netlify Functions for web scraping and data aggregation.
 
+## Monorepo Structure
+
+The project uses npm workspaces with three packages:
+
+```
+wosweat/
+├── shared/           # @wosweat/shared — types and constants used by both frontend and backend
+├── backend/          # @wosweat/backend — Netlify Functions (scraper)
+└── frontend/         # @wosweat/frontend — Ionic React app
+```
+
 ## Tech Stack
 
-- **Frontend**: Ionic React v8.5.0, React 19.0.0, TypeScript
-- **Build Tool**: Vite v5.2.0
-- **Backend**: Netlify Functions (serverless)
-- **Mobile**: Capacitor for iOS/Android builds
-- **Web Scraping**: Puppeteer with Chromium, Cheerio
+- **Frontend**: Ionic React, React 19, TypeScript, Vite, Capacitor
+- **Backend**: Netlify Functions (serverless), Cheerio, Puppeteer
 - **Testing**: Vitest (unit), Cypress (E2E)
-- **State Management**: React Context API with useReducer
+- **Build**: npm workspaces, esbuild (Netlify)
 
 ## Development Commands
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run unit tests
-npm run test.unit
-
-# Run E2E tests
-npm run test.e2e
-
-# Lint code
-npm run lint
-
-# Preview production build
-npm run preview
-
-# Mobile development
-ionic capacitor build ios
-ionic capacitor build android
-ionic capacitor run ios
-ionic capacitor run android
+npm install              # Install all workspace dependencies
+npm run dev              # Start Netlify dev server (frontend + functions)
+npm run build            # Build frontend for production
+npm run lint             # Lint code
 ```
 
 ## Architecture Overview
 
-### Frontend Architecture
+### Backend (Scraper)
 
-- **Entry Point**: `src/main.tsx` → `src/App.tsx`
-- **Routing**: Tab-based navigation with `/events` and `/direct` routes
-- **State Management**: `EventsContext` provides global state using Context API
-  - Manages events, loading states, errors, and auto-refresh
-  - 5-minute auto-refresh interval
-  - Local caching for offline support
-- **Service Layer**: `EventService` handles API calls and caching
-- **UI Style**: Vaporwave aesthetic with animated backgrounds
+Netlify Functions in `backend/functions/`:
+- `get-events.ts` — Main API endpoint, returns cached or freshly scraped events
+- `trigger-scrape.ts` — Manual scrape trigger (POST, auth-protected)
+- `scheduled-scrape.ts` — Daily cron job scraping all venues
+- `test-events.ts` — Returns sample events for frontend testing
 
-### Backend Architecture
+Scraper utilities in `backend/functions/utils/`:
+- `scraper.ts` — Orchestrator: dispatches to Cheerio or Puppeteer
+- `site-selectors.ts` — CSS selectors per venue
+- `date-parser.ts` — German/English date extraction
+- `storage.ts` — File-based cache in `/tmp` (5-min TTL)
+- `extractors/` — Per-venue extraction logic (artillery, baeckerei, kellertheater, generic)
 
-- **Netlify Functions** in `netlify/functions/`:
-  - `get-events.ts`: Main endpoint for retrieving events (supports caching)
-  - `trigger-scrape.ts`: Manual trigger for scraping all venues
-  - `scraper-utils.ts`: Core scraping logic with site-specific selectors
-- **Scraping Strategy**:
-  - Cheerio for static HTML sites
-  - Puppeteer for JavaScript-rendered sites
-  - Fallback to cached or sample data on failure
-- **Caching**: File-based caching in `/tmp` directory (5-minute TTL)
+### Shared
+
+- `shared/types/events.ts` — `EventData`, `ScraperResponse` interfaces
+- `shared/constants.ts` — `TARGET_SITES` (all venues), `CACHE_DURATION_MS`
+
+### Frontend
+
+Ionic React app in `frontend/` (currently scaffold, UI being redesigned).
 
 ### Data Flow
 
-1. Frontend requests events from `EventService`
-2. Service checks localStorage cache (5 min TTL)
-3. If cache miss, calls Netlify Function
-4. Function checks server cache or scrapes venues
-5. Data normalized and returned as `EventData[]`
-6. Frontend groups events by day and displays
+1. Frontend calls `/.netlify/functions/get-events`
+2. Function checks server cache (5-min TTL in `/tmp`)
+3. On cache miss, scrapes all venues from `TARGET_SITES`
+4. Cheerio for static HTML, Puppeteer for JS-rendered sites (music-hall.at)
+5. Future-dated events returned as `EventData[]`
 
-## Key Files and Directories
+## Key Files
 
 ```
-src/
-├── context/EventsContext.tsx    # Global state management
-├── services/events-service.ts   # API and caching layer
-├── pages/
-│   ├── EventsPage.tsx          # Main events view with grouping
-│   └── DirectEventsPage.tsx    # Debug view bypassing context
-├── components/                  # Reusable UI components
-└── types/                      # TypeScript interfaces
+shared/
+├── constants.ts                        # TARGET_SITES, CACHE_DURATION_MS
+└── types/events.ts                     # EventData, ScraperResponse
 
-netlify/functions/
-├── get-events.ts               # Main API endpoint
-├── trigger-scrape.ts           # Manual scrape trigger
-└── scraper-utils.ts            # Scraping implementation
-
-shared/types/
-└── event.ts                    # Shared EventData interface
+backend/functions/
+├── get-events.ts                       # Main API endpoint
+├── trigger-scrape.ts                   # Manual scrape trigger
+├── scheduled-scrape.ts                 # Cron job (daily midnight)
+├── test-events.ts                      # Test endpoint
+└── utils/
+    ├── scraper.ts                      # Scraping orchestrator
+    ├── site-selectors.ts               # Per-venue CSS selectors
+    ├── date-parser.ts                  # Date extraction
+    ├── storage.ts                      # /tmp cache
+    └── extractors/
+        ├── artillery.ts
+        ├── baeckerei.ts
+        ├── kellertheater.ts
+        └── generic.ts
 ```
 
-## Important Implementation Details
+## Event Data Model
 
-### Event Data Model
 ```typescript
 interface EventData {
   id: string;
   title: string;
-  date: string;      // ISO format
+  date: string;       // ISO format (YYYY-MM-DD)
   description: string;
   url: string;
   venue?: string;
@@ -117,82 +105,56 @@ interface EventData {
 }
 ```
 
-### Supported Venues
+## Supported Venues
+
 - Treibhaus Innsbruck
 - PMK Innsbruck
 - Artillery Productions (BigCartel)
-- Music Hall Innsbruck
+- Music Hall Innsbruck (Puppeteer, JS-rendered)
 - Die Bäckerei
-
-### Date Parsing
-- Supports multiple German/English date formats
-- Handles recurring events (e.g., "jeden Donnerstag")
-- Special handling for cancelled events
-
-### Performance Optimizations
-- Request interception blocks unnecessary resources during scraping
-- LocalStorage caching reduces API calls
-- Serverless-optimized Puppeteer configuration
-- Auto-scroll implementation for lazy-loaded content
+- BRUX Freies Theater Innsbruck
+- Innsbrucker Kellertheater
+- LiveStage Tirol
 
 ## TypeScript Configuration
 
-Note: The project uses TypeScript with `strict: false` but `noImplicitAny: true`. When writing code:
-- Always provide explicit types for function parameters
-- Use type inference for local variables where appropriate
-- Leverage existing types from `shared/types/`
-
-## Testing Strategy
-
-- **Unit Tests**: Test individual components and utilities
-- **E2E Tests**: Test full user flows including event viewing and searching
-- Run tests before committing any changes
+- `tsconfig.base.json` at root with shared compiler options (ES2020, strict, noImplicitAny)
+- Backend and frontend extend the base config
+- Backend uses `@wosweat/shared/*` path alias for shared imports
 
 ## Deployment
 
-The app is deployed on Netlify with:
-- Automatic builds on push
-- Serverless functions for backend
-- Environment variables for sensitive data (if needed)
+Deployed on Netlify:
+- `netlify.toml` points functions to `backend/functions/`, publish to `frontend/dist/`
+- `@sparticuz/chromium` bundled externally for Puppeteer
+- Environment: `TRIGGER_SECRET` for auth-protected scrape trigger
 
-Configuration in `netlify.toml` handles:
-- Build commands
-- Function directory
-- External module bundling for Puppeteer
+## Clean Code Principles
 
-## Clean Code Principles (Robert C. Martin Guidelines)
+- Self-documenting code, comments only when the "why" is non-obvious
+- Single responsibility per function/component
+- DRY — single source of truth (e.g., `TARGET_SITES` in shared/)
+- Functions under 20 lines where possible, max 3 arguments
+- Components under 200 lines, extract sub-components if larger
+- Functional components with hooks exclusively
+- Explicit props interfaces, strict typing
 
-### Core Principles
-- **Self-Documenting Code**: Write code so clear that comments become unnecessary
-- **Single Responsibility**: Each function/component should have one reason to change
-- **DRY (Don't Repeat Yourself)**: Eliminate code duplication through abstraction
-- **Small Functions**: Functions should be small and do one thing well
-- **Meaningful Names**: Use intention-revealing names for variables, functions, and classes
+## Frontend Design Philosophy
 
-### Function Guidelines
-- **Function Size**: Keep functions under 20 lines when possthese ible
-- **Function Arguments**: Prefer 0-3 arguments; use objects for multiple parameters
-- **Pure Functions**: Avoid side effects; return predictable outputs for given inputs
-- **Error Handling**: Use proper error boundaries; don't ignore caught exceptions
+You tend to converge toward generic, "on distribution" outputs. In frontend design, this creates what users call the "AI slop" aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight. Focus on:
 
-## Code Style Guidelines
+**Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics.
 
-### TypeScript Best Practices
-- **Strict Typing**: Use strict typing with interfaces/types for all components
-- **Discriminated Unions**: Use for type-safe state management (see `grantTypes.ts`)
-- **Interface Naming**: Use descriptive names (`FormFieldProps`, not `IProps`)
-- **Type Guards**: Implement type guards for runtime type checking
-- **Generic Types**: Use generics for reusable components (`useMultiStepForm<T>`)
+**Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes. Draw from IDE themes and cultural aesthetics for inspiration.
 
-### Component Architecture
-- **Functional Components**: Use functional components with hooks exclusively
-- **Custom Hooks**: Extract complex logic into custom hooks (`useErrorHandler`, `useLoadingManager`)
-- **Component Composition**: Prefer composition over inheritance
-- **Props Interface**: Always define explicit props interfaces
-- **Component Size**: Keep components under 200 lines; extract sub-components if larger
+**Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions.
 
-## Development Documentation Tracking
+**Backgrounds**: Create atmosphere and depth rather than defaulting to solid colors. Layer CSS gradients, use geometric patterns, or add contextual effects that match the overall aesthetic.
 
-### Guidelines for Development Work
-- Always update your tracking documents (if they exist)
-- Always apply your clean code guidelines, found in CLAUDE.md
+**Avoid generic AI-generated aesthetics:**
+- Overused font families (Inter, Roboto, Arial, system fonts)
+- Clichéd color schemes (particularly purple gradients on white backgrounds)
+- Predictable layouts and component patterns
+- Cookie-cutter design that lacks context-specific character
+
+Interpret creatively and make unexpected choices that feel genuinely designed for the context. Vary between light and dark themes, different fonts, different aesthetics. Avoid converging on common choices (Space Grotesk, for example) across generations — think outside the box.

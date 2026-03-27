@@ -1,14 +1,14 @@
 [build]
   command = "npm run build"
-  functions = "netlify/functions"
-  publish = "dist"
+  functions = "backend/functions"
+  publish = "frontend/dist"
 
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["@sparticuz/chromium"]
 
 [dev]
-  functions = "netlify/functions"
-  publish = "dist"
+  functions = "backend/functions"
+  publish = "frontend/dist"
   port = 8888
   autoLaunch = true

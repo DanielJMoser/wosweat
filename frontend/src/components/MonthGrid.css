@@ -1,0 +1,178 @@
+.month-grid {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  background: var(--ctp-mantle);
+  border-bottom: 1px solid var(--ctp-surface0);
+  transition:
+    max-height 0.4s cubic-bezier(0.2, 0, 0, 1),
+    opacity 0.3s ease;
+}
+
+.month-grid--open {
+  max-height: 500px;
+  overflow: visible;
+  opacity: 1;
+}
+
+.month-grid__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 16px 16px;
+}
+
+.month-grid__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.month-grid__header-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ctp-text);
+}
+
+.month-grid__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: var(--ctp-surface0);
+  color: var(--ctp-subtext0);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.month-grid__nav:hover {
+  color: var(--ctp-teal);
+}
+
+.month-grid__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.month-grid__day-label {
+  font-family: var(--font-body);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ctp-overlay0);
+  text-align: center;
+  padding: 4px 0;
+}
+
+.month-grid__cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.month-grid__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ctp-text);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.month-grid__cell:hover {
+  background: var(--ctp-surface0);
+}
+
+.month-grid__cell--past {
+  color: var(--ctp-overlay0);
+  cursor: default;
+}
+
+.month-grid__cell--past:hover {
+  background: none;
+}
+
+.month-grid__cell--outside {
+  visibility: hidden;
+}
+
+.month-grid__cell--today {
+  background: var(--ctp-teal);
+  color: var(--ctp-base);
+  font-weight: 800;
+}
+
+.month-grid__cell--today:hover {
+  background: var(--ctp-teal);
+}
+
+.month-grid__cell--selected {
+  border-color: var(--ctp-teal);
+}
+
+.month-grid__filters {
+  margin-top: 14px;
+  border-top: 1px solid var(--ctp-surface0);
+  padding-top: 10px;
+}
+
+.month-grid__filters-label {
+  font-family: var(--font-body);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ctp-overlay0);
+  margin-bottom: 8px;
+}
+
+.month-grid__chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.month-grid__chips::-webkit-scrollbar {
+  display: none;
+}
+
+.month-grid__chip {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 16px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--ctp-surface0);
+  color: var(--ctp-subtext0);
+}
+
+.month-grid__chip--active {
+  background: var(--ctp-teal);
+  color: var(--ctp-base);
+  font-weight: 600;
+}

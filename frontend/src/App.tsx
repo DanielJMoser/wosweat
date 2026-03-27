@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { IonApp, IonContent } from '@ionic/react';
 import { setupIonicReact } from '@ionic/react';
 import { useEvents } from './hooks/useEvents';
 import Header from './components/Header';
 import DateStrip from './components/DateStrip';
+import MonthGrid from './components/MonthGrid';
 import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
 
@@ -29,7 +31,9 @@ import './theme/variables.css';
 setupIonicReact({ mode: 'md' });
 
 const App: React.FC = () => {
-  const { eventsByDate, loading, selectedDate, setSelectedDate } = useEvents();
+  const [monthGridOpen, setMonthGridOpen] = useState(false);
+  const [venueFilter, setVenueFilter] = useState<string[]>([]);
+  const { eventsByDate, loading, selectedDate, setSelectedDate } = useEvents({ venueFilter });
   const eventsForDate = eventsByDate.get(selectedDate) ?? [];
 
   return (
@@ -38,7 +42,14 @@ const App: React.FC = () => {
       <DateStrip
         selectedDate={selectedDate}
         onDateSelect={setSelectedDate}
-        onToggleMonthGrid={() => {}}
+        onToggleMonthGrid={() => setMonthGridOpen(prev => !prev)}
+      />
+      <MonthGrid
+        selectedDate={selectedDate}
+        onDateSelect={setSelectedDate}
+        isOpen={monthGridOpen}
+        venueFilter={venueFilter}
+        onVenueFilterChange={setVenueFilter}
       />
       <IonContent>
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>

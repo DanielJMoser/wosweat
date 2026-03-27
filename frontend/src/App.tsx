@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { IonApp, IonContent } from '@ionic/react';
 import { setupIonicReact } from '@ionic/react';
 import { useEvents } from './hooks/useEvents';
@@ -7,6 +7,7 @@ import DateStrip from './components/DateStrip';
 import MonthGrid from './components/MonthGrid';
 import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
+import VenueList from './components/VenueList';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -33,12 +34,19 @@ setupIonicReact({ mode: 'md' });
 const App: React.FC = () => {
   const [monthGridOpen, setMonthGridOpen] = useState(false);
   const [venueFilter, setVenueFilter] = useState<string[]>([]);
+  const [venueListOpen, setVenueListOpen] = useState(false);
+  const venueListRef = useRef<HTMLDivElement>(null);
   const { eventsByDate, loading, selectedDate, setSelectedDate } = useEvents({ venueFilter });
   const eventsForDate = eventsByDate.get(selectedDate) ?? [];
 
+  const handleVenueListClick = () => {
+    setVenueListOpen(true);
+    venueListRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <IonApp>
-      <Header onVenueListClick={() => {}} />
+      <Header onVenueListClick={handleVenueListClick} />
       <DateStrip
         selectedDate={selectedDate}
         onDateSelect={setSelectedDate}
@@ -56,6 +64,9 @@ const App: React.FC = () => {
           <DateHeading date={selectedDate} />
           <EventGrid events={eventsForDate} loading={loading} />
         </main>
+        <div ref={venueListRef}>
+          <VenueList isOpen={venueListOpen} onToggle={() => setVenueListOpen(v => !v)} />
+        </div>
       </IonContent>
     </IonApp>
   );

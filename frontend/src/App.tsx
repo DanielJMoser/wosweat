@@ -4,6 +4,7 @@ import { useEvents } from './hooks/useEvents';
 import Header from './components/Header';
 import DateStrip from './components/DateStrip';
 import DateHeading from './components/DateHeading';
+import EventGrid from './components/EventGrid';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -28,7 +29,8 @@ import './theme/variables.css';
 setupIonicReact({ mode: 'md' });
 
 const App: React.FC = () => {
-  const { selectedDate, setSelectedDate } = useEvents();
+  const { eventsByDate, loading, selectedDate, setSelectedDate } = useEvents();
+  const eventsForDate = eventsByDate.get(selectedDate) ?? [];
 
   return (
     <IonApp>
@@ -41,6 +43,7 @@ const App: React.FC = () => {
       <IonContent>
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
           <DateHeading date={selectedDate} />
+          <EventGrid events={eventsForDate} loading={loading} />
         </main>
       </IonContent>
     </IonApp>

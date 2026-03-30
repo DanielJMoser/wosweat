@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { IonApp, IonContent } from '@ionic/react';
+import { IonApp, IonContent, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { setupIonicReact } from '@ionic/react';
 import { useEvents } from './hooks/useEvents';
 import Header from './components/Header';
@@ -49,7 +49,9 @@ const App: React.FC = () => {
   const [venueFilter, setVenueFilter] = useState<string[]>([]);
   const [venueListOpen, setVenueListOpen] = useState(false);
   const venueListRef = useRef<HTMLDivElement>(null);
-  const { eventsByDate, loading, selectedDate, setSelectedDate } = useEvents({ venueFilter });
+  const { eventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate } = useEvents({ venueFilter });
+  const [showError, setShowError] = useState(false);
+  useEffect(() => { if (error) setShowError(true); }, [error]);
   const eventsForDate = eventsByDate.get(selectedDate) ?? [];
 
   const handleVenueListClick = () => {
@@ -73,7 +75,26 @@ const App: React.FC = () => {
         onVenueFilterChange={setVenueFilter}
       />
       <IonContent>
+        <IonRefresher slot="fixed" onIonRefresh={(e) => { refresh().then(() => e.detail.complete()); }}>
+          <IonRefresherContent />
+        </IonRefresher>
+
+        {refreshing && <div className="refresh-progress-bar" />}
+
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
+          {showError && error && (
+            <div className="error-banner">
+              <div className="error-banner__content">
+                <span>Fehler beim Laden</span>
+                <button className="error-banner__retry" onClick={() => refresh()}>
+                  Erneut versuchen
+                </button>
+              </div>
+              <button className="error-banner__dismiss" onClick={() => setShowError(false)}>
+                ×
+              </button>
+            </div>
+          )}
           <DateHeading date={selectedDate} />
           <EventGrid events={eventsForDate} loading={loading} />
         </main>

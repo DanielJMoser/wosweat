@@ -12,7 +12,7 @@ interface UseEventsReturn {
   error: string | null;
   selectedDate: string;
   setSelectedDate: (date: string) => void;
-  refresh: () => void;
+  refresh: () => Promise<void>;
   refreshing: boolean;
 }
 
@@ -49,7 +49,7 @@ export function useEvents(options?: UseEventsOptions): UseEventsReturn {
   }, [fetchEvents]);
 
   const refresh = useCallback(() => {
-    fetchEvents(true);
+    return fetchEvents(true);
   }, [fetchEvents]);
 
   const filteredEvents = useMemo(() => {

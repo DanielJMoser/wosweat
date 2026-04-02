@@ -1,11 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { EventData } from '../../../shared/types/events';
 import EventCard from './EventCard';
 import './EventGrid.css';
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface EventGridProps {
   events: EventData[];
@@ -20,34 +17,24 @@ function getFeaturedIndex(events: EventData[]): number {
 const SKELETON_COUNT = 6;
 
 const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
+  const gridRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (events.length === 0) return;
+    if (events.length === 0 || !gridRef.current) return;
 
-    const timer = setTimeout(() => {
-      const cards = document.querySelectorAll('.event-grid__card');
-      cards.forEach((card, i) => {
-        gsap.fromTo(card,
-          { y: 20, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.5,
-            delay: i * 0.05,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: card,
-              start: 'top 90%',
-              once: true
-            }
-          }
-        );
-      });
-    }, 50);
+    const cards = gridRef.current.querySelectorAll('.event-grid__card');
+    gsap.fromTo(cards,
+      { y: 20, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.5,
+        stagger: 0.05,
+        ease: 'power2.out',
+      }
+    );
 
-    return () => {
-      clearTimeout(timer);
-      ScrollTrigger.getAll().forEach(t => t.kill());
-    };
+    return () => { gsap.killTweensOf(cards); };
   }, [events]);
 
   if (loading) {
@@ -70,7 +57,7 @@ const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
   const featuredIndex = getFeaturedIndex(events);
 
   return (
-    <div className="event-grid">
+    <div className="event-grid" ref={gridRef}>
       {events.map((event, i) => {
         const isFeatured = i === featuredIndex;
         return (

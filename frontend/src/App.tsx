@@ -9,8 +9,9 @@ import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
 import VenueList from './components/VenueList';
 import AccessibilityFab from './components/AccessibilityFab';
-import Lenis from 'lenis';
-import 'lenis/dist/lenis.css';
+// Lenis disabled — IonContent manages its own scroll container
+// import Lenis from 'lenis';
+// import 'lenis/dist/lenis.css';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -35,16 +36,6 @@ import './theme/variables.css';
 setupIonicReact({ mode: 'md' });
 
 const App: React.FC = () => {
-  useEffect(() => {
-    const lenis = new Lenis();
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   const [monthGridOpen, setMonthGridOpen] = useState(false);
   const [venueFilter, setVenueFilter] = useState<string[]>([]);
   const [venueListOpen, setVenueListOpen] = useState(false);

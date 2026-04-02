@@ -30,7 +30,8 @@ export function useEvents(options?: UseEventsOptions): UseEventsReturn {
     setError(null);
 
     try {
-      const url = isRefresh ? '/api/get-events?refresh=true' : '/api/get-events';
+      const base = import.meta.env.DEV ? '/api/get-events' : '/.netlify/functions/get-events';
+      const url = isRefresh ? `${base}?refresh=true` : base;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 

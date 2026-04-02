@@ -1,0 +1,7 @@
+{
+  "name": "wosweat-frontend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}

@@ -20,7 +20,10 @@ export function useEvents(options?: UseEventsOptions): UseEventsReturn {
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchEvents = useCallback(async (isRefresh = false) => {

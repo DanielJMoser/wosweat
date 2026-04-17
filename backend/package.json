@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
+    "@netlify/blobs": "^10.7.4",
     "@netlify/functions": "^3.1.8",
     "@sparticuz/chromium": "^133.0.0",
     "@wosweat/shared": "*",

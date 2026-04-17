@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
 import { EventData } from '@wosweat/shared/types/events';
+import { TARGET_SITES } from '@wosweat/shared/constants';
 import { getSelectorsForSite } from './site-selectors';
 import { extractArtilleryEvents } from './extractors/artillery';
 import { extractBaeckereiEvents } from './extractors/baeckerei';
@@ -103,4 +104,22 @@ async function scrapeWithPuppeteer(url: string): Promise<EventData[]> {
             await browser.close();
         }
     }
+}
+
+const VENUE_TIMEOUT_MS = 60_000;
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+    return Promise.race([
+        p,
+        new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms)
+        ),
+    ]);
+}
+
+export async function scrapeAllVenues(): Promise<EventData[]> {
+    const results = await Promise.allSettled(
+        TARGET_SITES.map((site) => withTimeout(scrapeEvents(site), VENUE_TIMEOUT_MS))
+    );
+    return results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
 }

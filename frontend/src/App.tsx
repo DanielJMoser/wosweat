@@ -40,7 +40,7 @@ const App: React.FC = () => {
   const [venueFilter, setVenueFilter] = useState<string[]>([]);
   const [venueListOpen, setVenueListOpen] = useState(false);
   const venueListRef = useRef<HTMLDivElement>(null);
-  const { eventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate } = useEvents({ venueFilter });
+  const { eventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
   const [showError, setShowError] = useState(false);
   useEffect(() => { if (error) setShowError(true); }, [error]);
   const eventsForDate = eventsByDate.get(selectedDate) ?? [];
@@ -84,6 +84,13 @@ const App: React.FC = () => {
               <button className="error-banner__dismiss" onClick={() => setShowError(false)}>
                 ×
               </button>
+            </div>
+          )}
+          {lastUpdated && Date.now() - new Date(lastUpdated).getTime() > 30 * 60 * 60 * 1000 && (
+            <div className="stale-hint">
+              Daten vom {new Intl.DateTimeFormat('de-AT', {
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+              }).format(new Date(lastUpdated))}
             </div>
           )}
           <DateHeading date={selectedDate} />

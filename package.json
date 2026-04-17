@@ -9,8 +9,12 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "netlify dev --filter @wosweat/backend",
+    "dev": "TRIGGER_SECRET=dev netlify dev --filter @wosweat/backend",
     "dev:functions": "netlify functions:serve --filter @wosweat/backend",
+    "dev:scrape": "curl -fsS -X POST -H 'Authorization: Bearer dev' http://localhost:8888/.netlify/functions/trigger-scrape | jq",
+    "dev:events": "curl -fsS http://localhost:8888/.netlify/functions/get-events | jq '{count, lastUpdated, sample: .events[0]}'",
+    "prod:scrape": "curl -fsS -X POST -H \"Authorization: Bearer $TRIGGER_SECRET\" https://wosweat.netlify.app/.netlify/functions/trigger-scrape | jq",
+    "prod:events": "curl -fsS https://wosweat.netlify.app/.netlify/functions/get-events | jq '{count, lastUpdated, sample: .events[0]}'",
     "build": "npm run build --workspace=frontend",
     "lint": "eslint"
   },

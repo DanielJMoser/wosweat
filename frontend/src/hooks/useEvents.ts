@@ -14,10 +14,12 @@ interface UseEventsReturn {
   setSelectedDate: (date: string) => void;
   refresh: () => Promise<void>;
   refreshing: boolean;
+  lastUpdated: string | null;
 }
 
 export function useEvents(options?: UseEventsOptions): UseEventsReturn {
   const [events, setEvents] = useState<EventData[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -33,13 +35,13 @@ export function useEvents(options?: UseEventsOptions): UseEventsReturn {
     setError(null);
 
     try {
-      const base = import.meta.env.DEV ? '/api/get-events' : '/.netlify/functions/get-events';
-      const url = isRefresh ? `${base}?refresh=true` : base;
-      const res = await fetch(url);
+      const url = import.meta.env.DEV ? '/api/get-events' : '/.netlify/functions/get-events';
+      const res = await fetch(url, isRefresh ? { cache: 'no-store' } : undefined);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
       setEvents(data?.events ?? []);
+      setLastUpdated(data?.lastUpdated ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to fetch events');
     } finally {
@@ -83,5 +85,6 @@ export function useEvents(options?: UseEventsOptions): UseEventsReturn {
     setSelectedDate,
     refresh,
     refreshing,
+    lastUpdated,
   };
 }

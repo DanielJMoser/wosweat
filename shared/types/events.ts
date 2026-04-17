@@ -11,9 +11,7 @@ export interface EventData {
 }
 
 export interface ScraperResponse {
-    success: boolean;
-    events?: EventData[];
-    error?: string;
-    count?: number;
-    timestamp?: string;
+    events: EventData[];
+    lastUpdated: string | null;
+    count: number;
 }

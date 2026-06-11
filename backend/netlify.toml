@@ -2,6 +2,12 @@
   node_bundler = "esbuild"
   external_node_modules = ["@sparticuz/chromium"]
 
+# `npm run dev` (root) filters to this package: functions on 8888, Vite proxied from 5173.
+# The [dev] command runs with cwd = repo root, hence the --workspace form.
 [dev]
   functions = "functions"
+  command = "npm run dev --workspace=@wosweat/frontend"
+  targetPort = 5173
+  framework = "#custom"
   port = 8888
+  autoLaunch = true

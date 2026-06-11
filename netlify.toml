@@ -9,6 +9,9 @@
 
 [dev]
   functions = "backend/functions"
-  publish = "frontend/dist"
+  command = "npm run dev --workspace=@wosweat/frontend"
+  targetPort = 5173
+  framework = "#custom"
   port = 8888
   autoLaunch = true
+  # Used only when running `netlify dev` without --filter; root `npm run dev` filters to @wosweat/backend

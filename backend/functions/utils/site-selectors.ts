@@ -2,12 +2,9 @@ export interface SiteSelectors {
     eventContainer: string;
     title: string;
     date?: string;
-    time?: string;
-    weekday?: string;
     description?: string;
     url: string;
     image?: string;
-    price?: string;
     venue: string;
     recurringEventContainer?: string;
     recurringTitle?: string;
@@ -40,17 +37,6 @@ export function getSelectorsForSite(url: string): SiteSelectors {
         };
     }
 
-    if (url.includes('artilleryproductions.bigcartel.com')) {
-        return {
-            eventContainer: '.product',
-            title: '.product_name, h4',
-            price: 'h5',
-            url: 'a',
-            image: 'img',
-            venue: 'Artillery Productions'
-        };
-    }
-
     if (url.includes('music-hall.at')) {
         return {
             eventContainer: '.event-list, .event-item, .dhvc-event, li.event, .event, article, .entry, .item',
@@ -68,8 +54,6 @@ export function getSelectorsForSite(url: string): SiteSelectors {
             eventContainer: '.event-thumb',
             title: '.event-thumb__title',
             date: '.event-thumb__day',
-            time: '.event-thumb__time',
-            weekday: '.event-thumb__weekday',
             description: '.event-thumb__excerpt',
             url: '.event-thumb',
             image: '.event-thumb__img',

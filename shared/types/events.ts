@@ -9,9 +9,3 @@ export interface EventData {
     imageUrl?: string;
     tags?: string[];
 }
-
-export interface ScraperResponse {
-    events: EventData[];
-    lastUpdated: string | null;
-    count: number;
-}

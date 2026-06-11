@@ -38,52 +38,52 @@ npm run lint             # Lint code
 ### Backend (Scraper)
 
 Netlify Functions in `backend/functions/`:
-- `get-events.ts` — Main API endpoint, returns cached or freshly scraped events
+- `get-events.ts` — Main API endpoint, serves future-dated events from the Blobs cache
 - `trigger-scrape.ts` — Manual scrape trigger (POST, auth-protected)
-- `scheduled-scrape.ts` — Daily cron job scraping all venues
-- `test-events.ts` — Returns sample events for frontend testing
+- `scheduled-scrape-background.ts` — Daily scrape at 00:01 Vienna time (cron runs 22:01 and 23:01 UTC; a Vienna-hour guard picks the right one across DST — intentional, don't simplify)
 
 Scraper utilities in `backend/functions/utils/`:
 - `scraper.ts` — Orchestrator: dispatches to Cheerio or Puppeteer
 - `site-selectors.ts` — CSS selectors per venue
 - `date-parser.ts` — German/English date extraction
-- `storage.ts` — File-based cache in `/tmp` (5-min TTL)
+- `blobs.ts` — Persistent events cache in Netlify Blobs
+- `timezone.ts` — Vienna-local hour/date helpers
 - `extractors/` — Per-venue extraction logic (artillery, baeckerei, kellertheater, generic)
 
 ### Shared
 
-- `shared/types/events.ts` — `EventData`, `ScraperResponse` interfaces
-- `shared/constants.ts` — `TARGET_SITES` (all venues), `CACHE_DURATION_MS`
+- `shared/types/events.ts` — `EventData` interface
+- `shared/constants.ts` — `TARGET_SITES` (all venues)
 
 ### Frontend
 
-Ionic React app in `frontend/` (currently scaffold, UI being redesigned).
+Ionic React app in `frontend/`: date strip + month grid navigation, event card grid, venue list, accessibility drawer (Catppuccin theme).
 
 ### Data Flow
 
-1. Frontend calls `/.netlify/functions/get-events`
-2. Function checks server cache (5-min TTL in `/tmp`)
-3. On cache miss, scrapes all venues from `TARGET_SITES`
-4. Cheerio for static HTML, Puppeteer for JS-rendered sites (music-hall.at)
-5. Future-dated events returned as `EventData[]`
+1. Scheduled function scrapes all venues from `TARGET_SITES` daily at 00:01 Vienna time
+2. Cheerio for static HTML, Puppeteer for JS-rendered sites (music-hall.at)
+3. Results stored in Netlify Blobs (`events-cache` store)
+4. Frontend calls `/.netlify/functions/get-events`, which reads the blob
+5. Future-dated events (Vienna "today" onwards) returned as `EventData[]`
 
 ## Key Files
 
 ```
 shared/
-├── constants.ts                        # TARGET_SITES, CACHE_DURATION_MS
-└── types/events.ts                     # EventData, ScraperResponse
+├── constants.ts                        # TARGET_SITES
+└── types/events.ts                     # EventData
 
 backend/functions/
 ├── get-events.ts                       # Main API endpoint
 ├── trigger-scrape.ts                   # Manual scrape trigger
-├── scheduled-scrape.ts                 # Cron job (daily midnight)
-├── test-events.ts                      # Test endpoint
+├── scheduled-scrape-background.ts      # Daily scrape (00:01 Vienna)
 └── utils/
     ├── scraper.ts                      # Scraping orchestrator
     ├── site-selectors.ts               # Per-venue CSS selectors
     ├── date-parser.ts                  # Date extraction
-    ├── storage.ts                      # /tmp cache
+    ├── blobs.ts                        # Netlify Blobs cache
+    ├── timezone.ts                     # Vienna time helpers
     └── extractors/
         ├── artillery.ts
         ├── baeckerei.ts
@@ -98,10 +98,12 @@ interface EventData {
   id: string;
   title: string;
   date: string;       // ISO format (YYYY-MM-DD)
+  time?: string;      // "21:00" — not yet populated by extractors
   description: string;
   url: string;
   venue?: string;
   imageUrl?: string;
+  tags?: string[];    // not yet populated by extractors
 }
 ```
 

@@ -7,7 +7,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onVenueListClick }) => (
   <header className="header-bar">
     <div className="header-inner">
-      <span className="header-wordmark">wosweat</span>
+      <span className="header-wordmark" role="heading" aria-level={1}>wosweat</span>
       <button
         className="header-venue-btn"
         onClick={onVenueListClick}

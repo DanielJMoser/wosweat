@@ -14,7 +14,7 @@ const DateHeading: React.FC<DateHeadingProps> = ({ date }) => {
   const month = MONTHS[d.getMonth()];
 
   return (
-    <div className="date-heading">
+    <div className="date-heading" role="heading" aria-level={2}>
       <div className="date-heading-weekday">{weekday}</div>
       <div className="date-heading-date">
         {day}. <span className="date-heading-month">{month}</span>

@@ -138,7 +138,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, featured }) => {
         <div className={`event-card__venue${isAlt ? ' event-card__venue--alt' : ''}`}>
           {venue.displayName}
         </div>
-        <div className="event-card__title">{event.title}</div>
+        <div className="event-card__title" role="heading" aria-level={3}>{event.title}</div>
         {(event.time || event.tags?.length) && (
           <div className="event-card__meta">
             {event.time && (

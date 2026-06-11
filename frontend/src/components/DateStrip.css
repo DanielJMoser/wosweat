@@ -61,7 +61,12 @@
 
 .date-pill--past .date-pill-day,
 .date-pill--past .date-pill-num {
-  color: var(--ctp-overlay0);
+  color: var(--ctp-subtext1);
+}
+
+/* Latte subtext1 on surface0 is just under 4.5:1; the lighter mantle fill passes */
+[data-theme="light"] .date-pill--past {
+  background: var(--ctp-mantle);
 }
 
 .date-pill--selected {
@@ -85,7 +90,7 @@
   justify-content: center;
   background: none;
   border: none;
-  padding: 4px;
+  padding: 8px;
   cursor: pointer;
   color: var(--ctp-subtext0);
   font-size: 14px;

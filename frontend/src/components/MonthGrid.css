@@ -69,7 +69,7 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--ctp-overlay0);
+  color: var(--ctp-subtext1);
   text-align: center;
   padding: 4px 0;
 }
@@ -103,7 +103,7 @@
 }
 
 .month-grid__cell--past {
-  color: var(--ctp-overlay0);
+  color: var(--ctp-subtext1);
   cursor: default;
 }
 
@@ -140,7 +140,7 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--ctp-overlay0);
+  color: var(--ctp-subtext1);
   margin-bottom: 8px;
 }
 

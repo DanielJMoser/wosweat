@@ -8,7 +8,7 @@ interface DateHeadingProps {
 }
 
 const DateHeading: React.FC<DateHeadingProps> = ({ date }) => {
-  const d = new Date(date);
+  const d = new Date(date + 'T00:00:00');
   const weekday = WEEKDAYS[d.getDay()];
   const day = d.getDate();
   const month = MONTHS[d.getMonth()];

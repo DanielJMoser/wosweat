@@ -126,9 +126,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, featured }) => {
           loading="lazy"
         />
       ) : (
-        <span className="event-card__initial">
-          {event.title?.charAt(0) ?? ''}
-        </span>
+        <div className="event-card__placeholder">
+          <span className="event-card__initial">
+            {event.title?.charAt(0) ?? ''}
+          </span>
+        </div>
       )}
 
       <div className="event-card__gradient" />

@@ -26,6 +26,15 @@
   display: block;
 }
 
+/* In-flow stand-in for the image: image-less cards size exactly like image cards.
+   The 3/2 ratio only takes effect where the image's intrinsic size would
+   (e.g. a lone featured card); everywhere else width+height are definite. */
+.event-card__placeholder {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 3/2;
+}
+
 .event-card__initial {
   position: absolute;
   top: 50%;

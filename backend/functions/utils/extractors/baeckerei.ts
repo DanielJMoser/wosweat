@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import { EventData } from '@wosweat/shared/types/events';
 import { extractDateFromText, cleanText } from '../date-parser';
+import { eventId } from '../event-id';
 import { getSelectorsForSite } from '../site-selectors';
 
 export function extractBaeckereiEvents($: cheerio.CheerioAPI, url: string): EventData[] {
@@ -36,7 +37,7 @@ export function extractBaeckereiEvents($: cheerio.CheerioAPI, url: string): Even
             if (isCancelled) fullDescription = `[CANCELLED] ${fullDescription}`;
 
             events.push({
-                id: `event-${index}-${Date.now()}`,
+                id: eventId(selectors.venue, eventDate, title, fullUrl),
                 title: isCancelled ? `[CANCELLED] ${title}` : title,
                 date: eventDate,
                 description: fullDescription,
@@ -66,7 +67,7 @@ export function extractBaeckereiEvents($: cheerio.CheerioAPI, url: string): Even
             const fullImageUrl = imageUrl ? new URL(imageUrl, url).toString() : undefined;
 
             events.push({
-                id: `recurring-event-${index}-${Date.now()}`,
+                id: eventId(selectors.venue, eventDate, `recurring-${title}`, fullUrl),
                 title: `[Recurring] ${title}`,
                 date: eventDate,
                 description: `This is a recurring event at Die Bäckerei. Time: ${dateText}`,

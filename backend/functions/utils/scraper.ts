@@ -12,16 +12,11 @@ import { extractGenericEvents } from './extractors/generic';
 
 const JS_RENDERING_SITES = ['music-hall.at'];
 
-export async function scrapeEvents(url: string, useJsRendering = false): Promise<EventData[]> {
-    try {
-        if (useJsRendering || JS_RENDERING_SITES.some(site => url.includes(site))) {
-            return await scrapeWithPuppeteer(url);
-        }
-        return await scrapeWithCheerio(url);
-    } catch (error) {
-        console.error(`Failed to scrape ${url}:`, error);
-        throw error;
+export async function scrapeEvents(url: string): Promise<EventData[]> {
+    if (JS_RENDERING_SITES.some(site => url.includes(site))) {
+        return scrapeWithPuppeteer(url);
     }
+    return scrapeWithCheerio(url);
 }
 
 async function scrapeWithCheerio(url: string): Promise<EventData[]> {
@@ -121,5 +116,16 @@ export async function scrapeAllVenues(): Promise<EventData[]> {
     const results = await Promise.allSettled(
         TARGET_SITES.map((site) => withTimeout(scrapeEvents(site), VENUE_TIMEOUT_MS))
     );
-    return results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
+
+    const unique = new Map<string, EventData>();
+    results.forEach((result, i) => {
+        if (result.status === 'rejected') {
+            console.error(`Scrape failed for ${TARGET_SITES[i]}:`, result.reason);
+            return;
+        }
+        for (const event of result.value) {
+            if (!unique.has(event.id)) unique.set(event.id, event);
+        }
+    });
+    return [...unique.values()];
 }

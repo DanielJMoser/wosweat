@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import { EventData } from '@wosweat/shared/types/events';
 import { extractDateFromText, cleanText } from '../date-parser';
+import { eventId } from '../event-id';
 import { SiteSelectors } from '../site-selectors';
 
 export function extractGenericEvents($: cheerio.CheerioAPI, url: string, selectors: SiteSelectors): EventData[] {
@@ -18,12 +19,13 @@ export function extractGenericEvents($: cheerio.CheerioAPI, url: string, selecto
 
             if (!title || !date) return;
 
+            const fullUrl = relativeUrl ? new URL(relativeUrl, url).toString() : url;
             events.push({
-                id: `event-${index}-${Date.now()}`,
+                id: eventId(selectors.venue, date, title, fullUrl),
                 title,
                 date,
                 description,
-                url: relativeUrl ? new URL(relativeUrl, url).toString() : url,
+                url: fullUrl,
                 venue: selectors.venue,
                 imageUrl: imageUrl ? new URL(imageUrl, url).toString() : undefined,
             });

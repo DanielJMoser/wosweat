@@ -13,6 +13,10 @@ export default async (req: Request) => {
         return new Response(null, { status: 200, headers: HEADERS });
     }
 
+    if (req.method !== 'POST') {
+        return new Response(null, { status: 405, headers: HEADERS });
+    }
+
     if (!process.env.TRIGGER_SECRET) {
         return new Response(null, { status: 503, headers: HEADERS });
     }

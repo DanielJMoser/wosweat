@@ -13,10 +13,27 @@ const monthNames: Record<string, string> = {
     'dezember': '12', 'december': '12', 'dez': '12', 'dec': '12'
 };
 
+const PAST_GRACE_MS = 60 * 24 * 60 * 60 * 1000;
+
+function inferYear(day: string, month: string): string {
+    const now = new Date();
+    const candidate = new Date(`${now.getFullYear()}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`);
+    // Venue pages list upcoming programs: a date far in the past without a year means next year
+    if (now.getTime() - candidate.getTime() > PAST_GRACE_MS) {
+        return String(now.getFullYear() + 1);
+    }
+    return String(now.getFullYear());
+}
+
 export function extractDateFromText(dateText: string): string {
     if (!dateText) return '';
 
     const cleanDateText = dateText.trim().replace(/\s+/g, ' ');
+
+    const isoMatch = cleanDateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+        return isoMatch[0];
+    }
 
     const fourDigitYearMatch = cleanDateText.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
     if (fourDigitYearMatch) {
@@ -33,13 +50,14 @@ export function extractDateFromText(dateText: string): string {
     const noYearMatch = cleanDateText.match(/(\d{1,2})\.(\d{1,2})\./);
     if (noYearMatch) {
         const [_, day, month] = noYearMatch;
-        return `${new Date().getFullYear()}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        return `${inferYear(day, month)}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
 
     const abbrevDayMatch = cleanDateText.match(/[A-Za-zäöüÄÖÜ]{2,3}\.?\s*(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
     if (abbrevDayMatch) {
-        const [_, day, month, year = String(new Date().getFullYear())] = abbrevDayMatch;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const [_, day, month, year] = abbrevDayMatch;
+        const resolvedYear = year ?? inferYear(day, month);
+        return `${resolvedYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
 
     const monthNameMatch = cleanDateText.toLowerCase().match(/(\d{1,2})\.?\s+([a-zäöü]+)\.?\s+(\d{4})/);
@@ -50,9 +68,6 @@ export function extractDateFromText(dateText: string): string {
             return `${year}-${month}-${day.padStart(2, '0')}`;
         }
     }
-
-    if (/^\d{1,2}:\d{2}\s*(UHR|AM|PM)?$/i.test(cleanDateText)) return '';
-    if (cleanDateText.length < 5 || /^\d{1,2}:\d{2}/.test(cleanDateText)) return '';
 
     return '';
 }

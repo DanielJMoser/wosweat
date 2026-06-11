@@ -75,7 +75,7 @@
 
 .date-pill--today-selected .date-pill-day,
 .date-pill--today-selected .date-pill-num {
-  color: var(--ctp-base);
+  color: var(--on-accent);
   font-weight: 800;
 }
 

@@ -117,7 +117,7 @@
 
 .month-grid__cell--today {
   background: var(--ctp-teal);
-  color: var(--ctp-base);
+  color: var(--on-accent);
   font-weight: 800;
 }
 
@@ -173,6 +173,6 @@
 
 .month-grid__chip--active {
   background: var(--ctp-teal);
-  color: var(--ctp-base);
+  color: var(--on-accent);
   font-weight: 600;
 }

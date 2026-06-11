@@ -141,7 +141,7 @@
 
 .a11y-btn--active {
   background: var(--ctp-teal);
-  color: var(--ctp-crust);
+  color: var(--on-accent);
   border-color: var(--ctp-teal);
 }
 
@@ -186,7 +186,7 @@
 
 .a11y-toggle input:checked + .a11y-toggle__track::after {
   transform: translateX(22px);
-  background: var(--ctp-crust);
+  background: var(--on-accent);
 }
 
 .a11y-toggle--loading .a11y-toggle__track {

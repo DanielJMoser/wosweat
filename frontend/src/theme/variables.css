@@ -29,6 +29,14 @@
   --font-display: 'Syne', sans-serif;
   --font-body: 'Bricolage Grotesque', sans-serif;
 
+  /* Card overlay text sits on images/dark gradients in BOTH themes — never theme-flipped */
+  --overlay-text: #cdd6f4;
+  --overlay-subtext: #a6adc8;
+  --overlay-teal: #94e2d5;
+  --overlay-lavender: #b4befe;
+  /* Text/icons on teal/lavender accent fills; dark enough for both palettes (≥4.5:1) */
+  --on-accent: #11111b;
+
   --a11y-font-scale: 1;
   --a11y-font-family: var(--font-body);
 

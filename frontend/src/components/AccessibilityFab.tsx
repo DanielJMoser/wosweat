@@ -251,10 +251,10 @@ const AccessibilityFab: React.FC = () => {
         aria-expanded={open}
       >
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="12" cy="4.5" r="2" fill="var(--ctp-crust)" />
+          <circle cx="12" cy="4.5" r="2" fill="var(--on-accent)" />
           <path
             d="M12 8c-3.5 0-6.5-1-6.5-1v2s2.5.5 4.5.7V22h2v-6h1v6h2V9.7c2-.2 4.5-.7 4.5-.7V7s-3 1-6.5 1z"
-            fill="var(--ctp-crust)"
+            fill="var(--on-accent)"
           />
         </svg>
       </button>

@@ -28,6 +28,21 @@
 
   --font-display: 'Syne', sans-serif;
   --font-body: 'Bricolage Grotesque', sans-serif;
+  --font-pixel: 'Silkscreen', monospace;
+  --font-marker: 'Permanent Marker', cursive;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --telly-height: 32px;
+
+  /* Console: pinned Mocha — terminal stays dark in both themes (spec §7/§10) */
+  --console-bg: #11111b;
+  --console-border: #313244;
+  --console-text: #cdd6f4;
+  --console-dim: #a6adc8;
+  --console-prompt: #94e2d5;
+  --console-keyword: #b4befe;
+  --console-string: #fab387;
+  --console-ok: #a6e3a1;
 
   /* Card overlay text sits on images/dark gradients in BOTH themes — never theme-flipped */
   --overlay-text: #cdd6f4;
@@ -92,6 +107,7 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;

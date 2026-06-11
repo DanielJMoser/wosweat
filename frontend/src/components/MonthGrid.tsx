@@ -55,16 +55,16 @@ const MonthGrid: React.FC<MonthGridProps> = ({
   };
 
   return (
-    <div className={`month-grid${isOpen ? ' month-grid--open' : ''}`}>
+    <div id="month-grid" className={`month-grid${isOpen ? ' month-grid--open' : ''}`} inert={!isOpen}>
       <div className="month-grid__inner">
         <div className="month-grid__header">
-          <button className="month-grid__nav" onClick={() => navigateMonth(-1)} aria-label="Previous month">
+          <button className="month-grid__nav" onClick={() => navigateMonth(-1)} aria-label="Voriger Monat">
             &#9664;
           </button>
           <span className="month-grid__header-title">
             {MONTHS[viewMonth]} {viewYear}
           </span>
-          <button className="month-grid__nav" onClick={() => navigateMonth(1)} aria-label="Next month">
+          <button className="month-grid__nav" onClick={() => navigateMonth(1)} aria-label="Nächster Monat">
             &#9654;
           </button>
         </div>
@@ -96,6 +96,9 @@ const MonthGrid: React.FC<MonthGridProps> = ({
                 key={iso}
                 className={className}
                 onClick={() => onDateSelect(iso)}
+                aria-label={`${dayNum}. ${MONTHS[viewMonth]} ${viewYear}`}
+                aria-pressed={iso === selectedDate}
+                aria-current={isToday ? 'date' : undefined}
               >
                 {dayNum}
               </button>
@@ -111,6 +114,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({
                 key={key}
                 className={`month-grid__chip${venueFilter.includes(key) ? ' month-grid__chip--active' : ''}`}
                 onClick={() => toggleVenue(key)}
+                aria-pressed={venueFilter.includes(key)}
               >
                 {cfg.displayName}
               </button>

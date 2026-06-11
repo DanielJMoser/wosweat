@@ -9,9 +9,6 @@ import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
 import VenueList from './components/VenueList';
 import AccessibilityFab from './components/AccessibilityFab';
-// Lenis disabled — IonContent manages its own scroll container
-// import Lenis from 'lenis';
-// import 'lenis/dist/lenis.css';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -47,7 +44,8 @@ const App: React.FC = () => {
 
   const handleVenueListClick = () => {
     setVenueListOpen(true);
-    venueListRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    venueListRef.current?.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth' });
   };
 
   return (
@@ -56,6 +54,7 @@ const App: React.FC = () => {
       <DateStrip
         selectedDate={selectedDate}
         onDateSelect={setSelectedDate}
+        monthGridOpen={monthGridOpen}
         onToggleMonthGrid={() => setMonthGridOpen(prev => !prev)}
       />
       <MonthGrid
@@ -74,14 +73,18 @@ const App: React.FC = () => {
 
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
           {showError && error && (
-            <div className="error-banner">
+            <div className="error-banner" role="alert">
               <div className="error-banner__content">
                 <span>Fehler beim Laden</span>
                 <button className="error-banner__retry" onClick={() => refresh()}>
                   Erneut versuchen
                 </button>
               </div>
-              <button className="error-banner__dismiss" onClick={() => setShowError(false)}>
+              <button
+                className="error-banner__dismiss"
+                onClick={() => setShowError(false)}
+                aria-label="Fehlermeldung schließen"
+              >
                 ×
               </button>
             </div>

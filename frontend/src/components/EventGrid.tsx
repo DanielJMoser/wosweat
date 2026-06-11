@@ -21,6 +21,7 @@ const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
 
   useEffect(() => {
     if (events.length === 0 || !gridRef.current) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const cards = gridRef.current.querySelectorAll('.event-grid__card');
     gsap.fromTo(cards,
@@ -39,7 +40,7 @@ const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
 
   if (loading) {
     return (
-      <div className="event-grid">
+      <div className="event-grid" role="status" aria-label="Events werden geladen">
         {Array.from({ length: SKELETON_COUNT }, (_, i) => (
           <div
             key={i}

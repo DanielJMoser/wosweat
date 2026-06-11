@@ -74,6 +74,22 @@ body {
   color: var(--ctp-text);
 }
 
+:focus-visible {
+  outline: 2px solid var(--ctp-teal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body::before {
   content: '';
   position: fixed;
@@ -85,13 +101,22 @@ body::before {
   z-index: 0;
 }
 
+/* Must stay after [data-theme="light"]: overrides the full neutral set so
+   high contrast wins consistently when combined with the light theme */
 [data-high-contrast] {
   --ctp-text: #ffffff;
+  --ctp-subtext1: #ffffff;
+  --ctp-subtext0: #e0e0e0;
+  --ctp-overlay1: #cccccc;
+  --ctp-overlay0: #b3b3b3;
   --ctp-base: #000000;
   --ctp-mantle: #000000;
   --ctp-crust: #000000;
   --ctp-surface0: #1a1a1a;
   --ctp-surface1: #333333;
+  --ctp-surface2: #4d4d4d;
+  --ctp-teal: #94e2d5;
+  --ctp-lavender: #b4befe;
 }
 
 @keyframes refresh-progress {

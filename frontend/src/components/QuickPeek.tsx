@@ -12,12 +12,12 @@ const QuickPeek: React.FC<QuickPeekProps> = ({ event, visible }) => {
   };
 
   return (
-    <div className={`quick-peek${visible ? ' quick-peek--visible' : ''}`}>
+    <div className={`quick-peek${visible ? ' quick-peek--visible' : ''}`} aria-hidden={!visible}>
       {event.description && (
         <p className="quick-peek__description">{event.description}</p>
       )}
       <span className="quick-peek__venue">{event.venue ?? 'Unbekannt'}</span>
-      <button className="quick-peek__link" onClick={handleLinkClick}>
+      <button className="quick-peek__link" onClick={handleLinkClick} tabIndex={visible ? 0 : -1}>
         Zur Website →
       </button>
     </div>

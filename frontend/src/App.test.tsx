@@ -1,7 +1,8 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import App from './App';
 
 test('renders app shell', () => {
-  const { baseElement } = render(<App />);
-  expect(baseElement).toBeDefined();
+  render(<App />);
+  expect(screen.getByText('wosweat')).toBeInTheDocument();
+  expect(screen.getByLabelText('Monatsansicht umschalten')).toBeInTheDocument();
 });

@@ -7,13 +7,12 @@ import './EventCard.css';
 interface EventCardProps {
   event: EventData;
   featured?: boolean;
-  onClick?: () => void;
 }
 
 const LONG_PRESS_MS = 500;
 const MOVE_THRESHOLD = 10;
 
-const EventCard: React.FC<EventCardProps> = ({ event, featured, onClick }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, featured }) => {
   const venue = getVenueConfig(event.venue);
   const isAlt = venue.accent === 'lavender';
   const hasImage = !!event.imageUrl;
@@ -60,13 +59,21 @@ const EventCard: React.FC<EventCardProps> = ({ event, featured, onClick }) => {
     return cancelLongPress;
   }, []);
 
+  const openEvent = () => {
+    window.open(event.url, '_blank', 'noopener');
+  };
+
   const handleClick = () => {
     if (preventClick.current) {
       preventClick.current = false;
       return;
     }
-    if (onClick) return onClick();
-    window.open(event.url, '_blank', 'noopener');
+    openEvent();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') openEvent();
+    if (e.key === 'Escape') hidePeek();
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -98,9 +105,15 @@ const EventCard: React.FC<EventCardProps> = ({ event, featured, onClick }) => {
       ref={cardRef}
       className={`event-card${featured ? ' event-card--featured' : ''}`}
       style={!hasImage ? { background: venue.gradient } : undefined}
+      role="link"
+      tabIndex={0}
+      aria-label={`${event.title} — ${venue.displayName}`}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       onMouseEnter={() => setShowPeek(true)}
       onMouseLeave={hidePeek}
+      onFocus={() => setShowPeek(true)}
+      onBlur={hidePeek}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

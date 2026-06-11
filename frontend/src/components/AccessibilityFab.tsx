@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './AccessibilityFab.css';
 
 interface A11ySettings {
@@ -55,14 +55,19 @@ function applyTheme(theme: A11ySettings['theme']) {
   }
 }
 
+let dyslexiaFontLoaded = false;
+
 async function applyDyslexiaFont(enabled: boolean) {
   if (enabled) {
-    const font = new FontFace(
-      'OpenDyslexic',
-      'url(https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.woff)'
-    );
-    await font.load();
-    document.fonts.add(font);
+    if (!dyslexiaFontLoaded) {
+      const font = new FontFace(
+        'OpenDyslexic',
+        'url(https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.woff)'
+      );
+      await font.load();
+      document.fonts.add(font);
+      dyslexiaFontLoaded = true;
+    }
     document.documentElement.style.setProperty('--a11y-font-family', "'OpenDyslexic', sans-serif");
   } else {
     document.documentElement.style.setProperty('--a11y-font-family', 'var(--font-body)');
@@ -73,13 +78,23 @@ function applyAll(settings: A11ySettings) {
   applyFontSize(settings.fontSize);
   applyHighContrast(settings.highContrast);
   applyTheme(settings.theme);
-  applyDyslexiaFont(settings.dyslexiaFont);
+  applyDyslexiaFont(settings.dyslexiaFont).catch((error) => {
+    console.error('Failed to load dyslexia font:', error);
+  });
 }
+
+const FONT_SIZE_LABELS: Record<A11ySettings['fontSize'], string> = {
+  s: 'Schriftgröße klein',
+  m: 'Schriftgröße mittel',
+  l: 'Schriftgröße groß',
+};
 
 const AccessibilityFab: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState<A11ySettings>(DEFAULTS);
   const [fontLoading, setFontLoading] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const fabRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const loaded = loadSettings();
@@ -87,13 +102,26 @@ const AccessibilityFab: React.FC = () => {
     applyAll(loaded);
   }, []);
 
-  const update = useCallback((patch: Partial<A11ySettings>) => {
-    setSettings(prev => {
-      const next = { ...prev, ...patch };
-      saveSettings(next);
-      return next;
-    });
+  const close = useCallback(() => {
+    setOpen(false);
+    fabRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    closeButtonRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, close]);
+
+  const update = (patch: Partial<A11ySettings>) => {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    saveSettings(next);
+  };
 
   const handleFontSize = (size: A11ySettings['fontSize']) => {
     update({ fontSize: size });
@@ -112,6 +140,8 @@ const AccessibilityFab: React.FC = () => {
     try {
       await applyDyslexiaFont(next);
       update({ dyslexiaFont: next });
+    } catch (error) {
+      console.error('Failed to load dyslexia font:', error);
     } finally {
       setFontLoading(false);
     }
@@ -124,12 +154,18 @@ const AccessibilityFab: React.FC = () => {
 
   return (
     <>
-      {open && <div className="a11y-backdrop" onClick={() => setOpen(false)} />}
+      {open && <div className="a11y-backdrop" onClick={close} aria-hidden="true" />}
 
-      <div className={`a11y-drawer${open ? ' a11y-drawer--open' : ''}`}>
+      <div
+        className={`a11y-drawer${open ? ' a11y-drawer--open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="a11y-drawer-title"
+        inert={!open}
+      >
         <div className="a11y-drawer__header">
-          <h2 className="a11y-drawer__title">Barrierefreiheit</h2>
-          <button className="a11y-drawer__close" onClick={() => setOpen(false)} aria-label="Close">
+          <h2 className="a11y-drawer__title" id="a11y-drawer-title">Barrierefreiheit</h2>
+          <button ref={closeButtonRef} className="a11y-drawer__close" onClick={close} aria-label="Schließen">
             ×
           </button>
         </div>
@@ -143,6 +179,8 @@ const AccessibilityFab: React.FC = () => {
                   key={size}
                   className={`a11y-btn${settings.fontSize === size ? ' a11y-btn--active' : ''}`}
                   onClick={() => handleFontSize(size)}
+                  aria-label={FONT_SIZE_LABELS[size]}
+                  aria-pressed={settings.fontSize === size}
                 >
                   {size.toUpperCase()}
                 </button>
@@ -158,6 +196,7 @@ const AccessibilityFab: React.FC = () => {
                   type="checkbox"
                   checked={settings.highContrast}
                   onChange={handleHighContrast}
+                  aria-label="Hoher Kontrast"
                 />
                 <span className="a11y-toggle__track" />
               </label>
@@ -173,6 +212,7 @@ const AccessibilityFab: React.FC = () => {
                   checked={settings.dyslexiaFont}
                   onChange={handleDyslexiaFont}
                   disabled={fontLoading}
+                  aria-label="Legasthenie-Schrift"
                 />
                 <span className="a11y-toggle__track" />
               </label>
@@ -185,12 +225,16 @@ const AccessibilityFab: React.FC = () => {
               <button
                 className={`a11y-btn${settings.theme === 'dark' ? ' a11y-btn--active' : ''}`}
                 onClick={() => handleTheme('dark')}
+                aria-label="Dunkles Design"
+                aria-pressed={settings.theme === 'dark'}
               >
                 &#9790;
               </button>
               <button
                 className={`a11y-btn${settings.theme === 'light' ? ' a11y-btn--active' : ''}`}
                 onClick={() => handleTheme('light')}
+                aria-label="Helles Design"
+                aria-pressed={settings.theme === 'light'}
               >
                 &#9728;
               </button>
@@ -199,8 +243,14 @@ const AccessibilityFab: React.FC = () => {
         </div>
       </div>
 
-      <button className="a11y-fab" onClick={() => setOpen(prev => !prev)} aria-label="Accessibility settings">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <button
+        ref={fabRef}
+        className="a11y-fab"
+        onClick={() => setOpen(prev => !prev)}
+        aria-label="Barrierefreiheits-Einstellungen"
+        aria-expanded={open}
+      >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <circle cx="12" cy="4.5" r="2" fill="var(--ctp-crust)" />
           <path
             d="M12 8c-3.5 0-6.5-1-6.5-1v2s2.5.5 4.5.7V22h2v-6h1v6h2V9.7c2-.2 4.5-.7 4.5-.7V7s-3 1-6.5 1z"

@@ -128,11 +128,11 @@ const QueryConsole: React.FC<QueryConsoleProps> = ({ events, todayIso }) => {
         <span className="console__dot" aria-hidden="true" />
         <span className="console__dot" aria-hidden="true" />
         wosweat query console
-        <span className="console__status">● 100% lokal — kein server, kein eval</span>
+        <span className="console__status">● lafft</span>
       </div>
       <div className="console__body">
         <div className="console__comment">
-          -- filtere events, exportiere kalender. nur lesend, läuft komplett im browser.
+          -- filtere events, exportiere kalender. read-only! :P.
         </div>
         <div className="console__log" ref={logRef} role="log" aria-label="Abfrage-Ausgabe" tabIndex={0}>
           {entries.map((entry, i) => (

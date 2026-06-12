@@ -8,6 +8,8 @@ interface UseEventsOptions {
 interface UseEventsReturn {
   events: EventData[];
   eventsByDate: Map<string, EventData[]>;
+  allEvents: EventData[];
+  allEventsByDate: Map<string, EventData[]>;
   loading: boolean;
   error: string | null;
   selectedDate: string;
@@ -15,6 +17,17 @@ interface UseEventsReturn {
   refresh: () => Promise<void>;
   refreshing: boolean;
   lastUpdated: string | null;
+}
+
+function groupByDate(list: EventData[]): Map<string, EventData[]> {
+  const map = new Map<string, EventData[]>();
+  for (const event of list) {
+    const key = event.date ?? 'unknown';
+    const group = map.get(key);
+    if (group) group.push(event);
+    else map.set(key, [event]);
+  }
+  return map;
 }
 
 export function useEvents(options?: UseEventsOptions): UseEventsReturn {
@@ -65,20 +78,14 @@ export function useEvents(options?: UseEventsOptions): UseEventsReturn {
     );
   }, [events, options?.venueFilter]);
 
-  const eventsByDate = useMemo(() => {
-    const map = new Map<string, EventData[]>();
-    for (const event of filteredEvents) {
-      const key = event.date ?? 'unknown';
-      const group = map.get(key);
-      if (group) group.push(event);
-      else map.set(key, [event]);
-    }
-    return map;
-  }, [filteredEvents]);
+  const eventsByDate = useMemo(() => groupByDate(filteredEvents), [filteredEvents]);
+  const allEventsByDate = useMemo(() => groupByDate(events), [events]);
 
   return {
     events: filteredEvents,
     eventsByDate,
+    allEvents: events,
+    allEventsByDate,
     loading,
     error,
     selectedDate,

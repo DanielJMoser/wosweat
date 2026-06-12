@@ -8,6 +8,7 @@ import MonthGrid from './components/MonthGrid';
 import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
 import VenueList from './components/VenueList';
+import ViewControls, { View } from './components/ViewControls';
 import AccessibilityFab from './components/AccessibilityFab';
 
 /* Core CSS required for Ionic components to work properly */
@@ -35,6 +36,13 @@ setupIonicReact({ mode: 'md' });
 const App: React.FC = () => {
   const [monthGridOpen, setMonthGridOpen] = useState(false);
   const [venueFilter, setVenueFilter] = useState<string[]>([]);
+  const [view, setView] = useState<View>(() => {
+    try { return localStorage.getItem('wosweat-view') === 'list' ? 'list' : 'cards'; } catch { return 'cards'; }
+  });
+  const changeView = (v: View) => {
+    setView(v);
+    try { localStorage.setItem('wosweat-view', v); } catch { /* private mode */ }
+  };
   const [venueListOpen, setVenueListOpen] = useState(false);
   const venueListRef = useRef<HTMLDivElement>(null);
   const { eventsByDate, allEvents, allEventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
@@ -72,8 +80,6 @@ const App: React.FC = () => {
         selectedDate={selectedDate}
         onDateSelect={setSelectedDate}
         isOpen={monthGridOpen}
-        venueFilter={venueFilter}
-        onVenueFilterChange={setVenueFilter}
       />
       <IonContent>
         <IonRefresher slot="fixed" onIonRefresh={(e) => { refresh().then(() => e.detail.complete()); }}>
@@ -112,6 +118,12 @@ const App: React.FC = () => {
             eventCount={eventsForDate.length}
             venueCount={new Set(eventsForDate.map(e => e.venue).filter(Boolean)).size}
             isToday={selectedDate === todayIso}
+          />
+          <ViewControls
+            venueFilter={venueFilter}
+            onVenueFilterChange={setVenueFilter}
+            view={view}
+            onViewChange={changeView}
           />
           <EventGrid events={eventsForDate} loading={loading} />
         </main>

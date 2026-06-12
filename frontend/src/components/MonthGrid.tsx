@@ -1,13 +1,10 @@
 import { useMemo } from 'react';
-import { VENUE_CONFIG } from '../config/venues';
 import './MonthGrid.css';
 
 interface MonthGridProps {
   selectedDate: string;
   onDateSelect: (date: string) => void;
   isOpen: boolean;
-  venueFilter: string[];
-  onVenueFilterChange: (venues: string[]) => void;
 }
 
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -29,8 +26,6 @@ const MonthGrid: React.FC<MonthGridProps> = ({
   selectedDate,
   onDateSelect,
   isOpen,
-  venueFilter,
-  onVenueFilterChange,
 }) => {
   const today = useMemo(() => toISO(new Date()), []);
   const viewDate = new Date(selectedDate + 'T00:00:00');
@@ -45,13 +40,6 @@ const MonthGrid: React.FC<MonthGridProps> = ({
   const navigateMonth = (delta: number) => {
     const d = new Date(viewYear, viewMonth + delta, 1);
     onDateSelect(toISO(d));
-  };
-
-  const toggleVenue = (key: string) => {
-    const next = venueFilter.includes(key)
-      ? venueFilter.filter(v => v !== key)
-      : [...venueFilter, key];
-    onVenueFilterChange(next);
   };
 
   return (
@@ -106,21 +94,6 @@ const MonthGrid: React.FC<MonthGridProps> = ({
           })}
         </div>
 
-        <div className="month-grid__filters">
-          <div className="month-grid__filters-label">Venues</div>
-          <div className="month-grid__chips">
-            {Object.entries(VENUE_CONFIG).map(([key, cfg]) => (
-              <button
-                key={key}
-                className={`month-grid__chip${venueFilter.includes(key) ? ' month-grid__chip--active' : ''}`}
-                onClick={() => toggleVenue(key)}
-                aria-pressed={venueFilter.includes(key)}
-              >
-                {cfg.displayName}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

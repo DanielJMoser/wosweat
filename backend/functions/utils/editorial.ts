@@ -26,11 +26,12 @@ export interface EditorialContent {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^\d{2}:\d{2}$/;
+const str = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
 
 export function mapCustomEvents(raw: RawCustomEvent[]): EventData[] {
     const events: EventData[] = [];
     for (const r of raw ?? []) {
-        if (!r?._id || !r.title || !r.date || !ISO_DATE.test(r.date) || !r.venue) {
+        if (!str(r?._id) || !str(r.title) || !str(r.date) || !ISO_DATE.test(r.date) || !str(r.venue)) {
             console.warn('[editorial] skipping malformed customEvent', r?._id ?? '(no id)');
             continue;
         }
@@ -38,11 +39,11 @@ export function mapCustomEvents(raw: RawCustomEvent[]): EventData[] {
             id: `sanity-${r._id}`,
             title: r.title,
             date: r.date,
-            ...(r.time && TIME.test(r.time) ? { time: r.time } : {}),
-            description: r.description ?? '',
-            url: r.url ?? '',
+            ...(str(r.time) && TIME.test(r.time) ? { time: r.time } : {}),
+            description: typeof r.description === 'string' ? r.description : '',
+            url: typeof r.url === 'string' ? r.url : '',
             venue: r.venue,
-            ...(r.imageUrl ? { imageUrl: `${r.imageUrl}?w=1200&auto=format` } : {}),
+            ...(str(r.imageUrl) ? { imageUrl: `${r.imageUrl}?w=1200&auto=format` } : {}),
             ...(Array.isArray(r.tags) && r.tags.length
                 ? { tags: r.tags.filter((t): t is string => typeof t === 'string') }
                 : {}),
@@ -53,14 +54,18 @@ export function mapCustomEvents(raw: RawCustomEvent[]): EventData[] {
 }
 
 export function applyRecommendations(events: EventData[], recs: RawRecommendation[]): EventData[] {
-    const valid = (recs ?? []).filter(
-        (r) => r?.venue && r.date && typeof r.titleContains === 'string' && r.titleContains.length >= 3,
-    );
+    const valid = (recs ?? []).flatMap((r) => {
+        if (str(r?.venue) && str(r.date) && typeof r.titleContains === 'string' && r.titleContains.length >= 3) {
+            return [{ venue: r.venue, date: r.date, fragment: r.titleContains.toLowerCase() }];
+        }
+        console.warn('[editorial] skipping malformed recommendation', r?.venue ?? '(no venue)', r?.date ?? '');
+        return [];
+    });
     if (valid.length === 0) return events;
     return events.map((e) => {
         const hit = valid.some(
             (r) => e.venue === r.venue && e.date === r.date
-                && e.title?.toLowerCase().includes(r.titleContains!.toLowerCase()),
+                && typeof e.title === 'string' && e.title.toLowerCase().includes(r.fragment),
         );
         return hit ? { ...e, recommended: true } : e;
     });

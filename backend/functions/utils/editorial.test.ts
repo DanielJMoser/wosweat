@@ -116,4 +116,29 @@ describe('mergeEditorial', () => {
         expect(out.map(e => e.id)).toEqual(['e1', 'sanity-abc123']);
         expect(out[0].recommended).toBe(true);
     });
+
+    test('non-string fields from Sanity never throw and never flag', () => {
+        const out = mergeEditorial([scraped()], {
+            custom: [
+                rawEvent({ title: 42 as never }),
+                rawEvent({ _id: 'ok1', description: { de: 'x' } as never, url: 7 as never, imageUrl: {} as never }),
+            ],
+            recs: [{ venue: 'Hofgarten', date: '2026-07-01', titleContains: 'hofgarten' }],
+        });
+        expect(out.find(e => e.id === 'sanity-abc123')).toBeUndefined();
+        const ok = out.find(e => e.id === 'sanity-ok1');
+        expect(ok?.description).toBe('');
+        expect(ok?.url).toBe('');
+        expect(ok?.imageUrl).toBeUndefined();
+        expect(ok?.recommended).toBe(true);
+    });
+
+    test('a recommendation matching a custom event that is already recommended stays a single flag', () => {
+        const out = mergeEditorial([], {
+            custom: [rawEvent({ recommended: true })],
+            recs: [{ venue: 'Hofgarten', date: '2026-07-01', titleContains: 'open air' }],
+        });
+        expect(out).toHaveLength(1);
+        expect(out[0].recommended).toBe(true);
+    });
 });

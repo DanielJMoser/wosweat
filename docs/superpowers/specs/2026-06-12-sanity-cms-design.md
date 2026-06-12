@@ -120,7 +120,7 @@ Cache header change: `max-age=3600` → `max-age=300` on the hit path, otherwise
 
 - **EventList**: restore `event-list__row--feat` styling + "heißer tipp!" marker from `8d1ffed`, driven by `event.recommended` instead of "first row". Recommended rows can appear anywhere in the list, any number of them (including zero — the common case).
 - **Empty-url guard**: rows/cards for a custom event without a link must not act as links (no `role="link"`, no navigation, no empty `href`).
-- **Venue chips**: a custom venue outside `VENUE_CONFIG` gets no chip and appears under "Alle" only — accepted for now.
+- **Venue chips**: a custom venue outside `VENUE_CONFIG` gets no chip and appears under "Alle" only — accepted for now. Its hand-entered name must still display on rows/cards (fallback styling); `getVenueConfig` may not collapse it to "Unbekannt". (Added after plan review.)
 - Explicitly **out of scope** (noted as future ideas): Tipp badge in the cards view, `recommended` as a WQL-queryable field, Tipp styling in the telly band. Per user (2026-06-12): the cards-view badge and the WQL field are wanted in a **future iteration** — not this one.
 
 ## Accessibility

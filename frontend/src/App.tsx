@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonApp, IonContent, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { setupIonicReact } from '@ionic/react';
 import { useEvents } from './hooks/useEvents';
@@ -37,10 +37,18 @@ const App: React.FC = () => {
   const [venueFilter, setVenueFilter] = useState<string[]>([]);
   const [venueListOpen, setVenueListOpen] = useState(false);
   const venueListRef = useRef<HTMLDivElement>(null);
-  const { eventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
+  const { eventsByDate, allEvents, allEventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
   const [showError, setShowError] = useState(false);
   useEffect(() => { if (error) setShowError(true); }, [error]);
   const eventsForDate = eventsByDate.get(selectedDate) ?? [];
+  const todayIso = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
+  const countsByDate = useMemo(
+    () => new Map([...allEventsByDate].map(([k, v]) => [k, v.length])),
+    [allEventsByDate],
+  );
 
   const handleVenueListClick = () => {
     setVenueListOpen(true);
@@ -57,6 +65,8 @@ const App: React.FC = () => {
         onDateSelect={setSelectedDate}
         monthGridOpen={monthGridOpen}
         onToggleMonthGrid={() => setMonthGridOpen(prev => !prev)}
+        countsByDate={countsByDate}
+        todayIso={todayIso}
       />
       <MonthGrid
         selectedDate={selectedDate}

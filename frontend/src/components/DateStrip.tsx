@@ -6,6 +6,8 @@ interface DateStripProps {
   onDateSelect: (date: string) => void;
   monthGridOpen: boolean;
   onToggleMonthGrid: () => void;
+  countsByDate: Map<string, number>;
+  todayIso: string;
 }
 
 const DAY_ABBR = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -15,6 +17,12 @@ const FULL_DATE = new Intl.DateTimeFormat('de-AT', {
   day: 'numeric',
   month: 'long',
 });
+
+function countLabel(count: number): string {
+  if (count === 0) return 'keine Events';
+  if (count === 1) return '1 Event';
+  return `${count} Events`;
+}
 
 function buildDays(today: string): string[] {
   const base = new Date(today + 'T00:00:00');
@@ -33,13 +41,11 @@ const DateStrip: React.FC<DateStripProps> = ({
   onDateSelect,
   monthGridOpen,
   onToggleMonthGrid,
+  countsByDate,
+  todayIso,
 }) => {
   const todayRef = useRef<HTMLButtonElement>(null);
-  const today = useMemo(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }, []);
-  const days = useMemo(() => buildDays(today), [today]);
+  const days = useMemo(() => buildDays(todayIso), [todayIso]);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -54,14 +60,15 @@ const DateStrip: React.FC<DateStripProps> = ({
             const d = new Date(iso + 'T00:00:00');
             const dayIdx = d.getDay();
             const dayNum = d.getDate();
-            const isToday = iso === today;
+            const isToday = iso === todayIso;
             const isSelected = iso === selectedDate;
-            const isPast = iso < today;
+            const count = countsByDate.get(iso) ?? 0;
 
             let className = 'date-pill';
+            if (isToday) className += ' date-pill--today';
             if (isToday && isSelected) className += ' date-pill--today-selected';
             else if (isSelected) className += ' date-pill--selected';
-            else if (isPast) className += ' date-pill--past';
+            else if (!isToday && iso < todayIso) className += ' date-pill--past';
 
             return (
               <button
@@ -69,12 +76,13 @@ const DateStrip: React.FC<DateStripProps> = ({
                 ref={isToday ? todayRef : undefined}
                 className={className}
                 onClick={() => onDateSelect(iso)}
-                aria-label={FULL_DATE.format(d)}
+                aria-label={`${FULL_DATE.format(d)}, ${countLabel(count)}`}
                 aria-pressed={isSelected}
                 aria-current={isToday ? 'date' : undefined}
               >
                 <span className="date-pill-day">{DAY_ABBR[dayIdx]}</span>
                 <span className="date-pill-num">{dayNum}</span>
+                {count > 0 && <span className="date-pill-count" aria-hidden="true">{count} EV</span>}
               </button>
             );
           })}

@@ -73,15 +73,35 @@
   border-color: var(--ctp-teal);
 }
 
-.date-pill--today-selected {
+.date-pill-count {
+  font-family: var(--font-pixel);
+  font-size: 0.5625rem;
+  line-height: 1.4;
+  color: var(--ctp-teal);
+}
+
+[data-theme="light"] .date-pill-count {
+  color: var(--ctp-text);
+}
+
+.date-pill--today {
   background: var(--ctp-teal);
   border-color: var(--ctp-teal);
 }
 
-.date-pill--today-selected .date-pill-day,
-.date-pill--today-selected .date-pill-num {
+.date-pill--today .date-pill-day,
+.date-pill--today .date-pill-num,
+.date-pill--today .date-pill-count {
   color: var(--on-accent);
   font-weight: 800;
+}
+
+[data-theme="light"] .date-pill--today .date-pill-count {
+  color: var(--on-accent);
+}
+
+.date-pill--today-selected {
+  border-color: var(--on-accent);
 }
 
 .date-strip-chevron {

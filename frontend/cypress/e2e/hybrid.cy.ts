@@ -60,6 +60,23 @@ describe('hybrid ui — desktop', () => {
   });
 });
 
+describe('hybrid ui — light theme', () => {
+  it('badges and console keep AA-safe colors in Latte', () => {
+    cy.viewport(1280, 900);
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('wosweat-a11y', JSON.stringify({
+          fontSize: 's', highContrast: false, dyslexiaFont: false, theme: 'light',
+        }));
+      },
+    });
+    cy.get('.date-pill:not(.date-pill--today) .date-pill-count').first()
+      .should('have.css', 'color', 'rgb(76, 79, 105)');
+    cy.get('.console').should('have.css', 'background-color', 'rgb(17, 17, 27)');
+    cy.get('.header-artifact').should('have.css', 'color', 'rgb(108, 111, 133)');
+  });
+});
+
 describe('hybrid ui — mobile', () => {
   beforeEach(() => cy.viewport(390, 844));
 

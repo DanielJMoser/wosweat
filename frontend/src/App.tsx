@@ -151,7 +151,7 @@ const App: React.FC = () => {
         </div>
       </IonContent>
       <AccessibilityFab />
-      <TellyBand events={eventsForDate} />
+      {!loading && <TellyBand events={eventsForDate} />}
     </IonApp>
   );
 };

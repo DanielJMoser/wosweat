@@ -1,3 +1,5 @@
+import { VENUES } from '@wosweat/shared/constants';
+
 export interface SiteSelectors {
     eventContainer: string;
     title: string;
@@ -21,7 +23,7 @@ export function getSelectorsForSite(url: string): SiteSelectors {
             description: '.description, .text, .content, p',
             url: 'a',
             image: 'img',
-            venue: 'Treibhaus Innsbruck'
+            venue: VENUES.treibhaus
         };
     }
 
@@ -33,7 +35,7 @@ export function getSelectorsForSite(url: string): SiteSelectors {
             description: 'p.md\\:text-lg',
             url: 'h2 a',
             image: 'img[loading="lazy"]',
-            venue: 'PMK Innsbruck'
+            venue: VENUES.pmk
         };
     }
 
@@ -45,7 +47,7 @@ export function getSelectorsForSite(url: string): SiteSelectors {
             description: '.event-content, .description, .excerpt, p',
             url: 'a',
             image: '.event-image img, img',
-            venue: 'Music Hall Innsbruck'
+            venue: VENUES.musicHall
         };
     }
 
@@ -61,7 +63,7 @@ export function getSelectorsForSite(url: string): SiteSelectors {
             recurringTitle: '.recurring-event-thumb__title',
             recurringDate: '.recurring-event-thumb__day',
             recurringImage: '.recurring-event-thumb__img',
-            venue: 'Die Bäckerei'
+            venue: VENUES.baeckerei
         };
     }
 
@@ -73,7 +75,7 @@ export function getSelectorsForSite(url: string): SiteSelectors {
             description: '.lp-subtitle',
             url: '.lp-title-link',
             image: 'img',
-            venue: 'BRUX Freies Theater Innsbruck'
+            venue: VENUES.brux
         };
     }
 
@@ -85,7 +87,7 @@ export function getSelectorsForSite(url: string): SiteSelectors {
             description: '.text-secondary.text-uppercase',
             url: 'h3 a',
             image: 'img',
-            venue: 'LiveStage Tirol'
+            venue: VENUES.livestage
         };
     }
 

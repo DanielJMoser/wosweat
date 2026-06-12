@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import { EventData } from '@wosweat/shared/types/events';
+import { VENUES } from '@wosweat/shared/constants';
 import { cleanText } from '../date-parser';
 import { eventId } from '../event-id';
 
@@ -25,12 +26,12 @@ export function extractKellertheaterEvents($: cheerio.CheerioAPI, url: string): 
             const imageUrl = jsonLd.image || article.find('img').attr('src') || undefined;
 
             events.push({
-                id: eventId('Innsbrucker Kellertheater', eventDate, title, eventUrl || url),
+                id: eventId(VENUES.kellertheater, eventDate, title, eventUrl || url),
                 title,
                 date: eventDate,
                 description,
                 url: eventUrl || url,
-                venue: 'Innsbrucker Kellertheater',
+                venue: VENUES.kellertheater,
                 imageUrl,
             });
         } catch (error) {

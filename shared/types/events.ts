@@ -8,4 +8,5 @@ export interface EventData {
     venue?: string;
     imageUrl?: string;
     tags?: string[];
+    recommended?: boolean;
 }

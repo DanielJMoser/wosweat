@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import { EventData } from '@wosweat/shared/types/events';
+import { VENUES } from '@wosweat/shared/constants';
 import { cleanText } from '../date-parser';
 import { eventId } from '../event-id';
 
@@ -26,12 +27,12 @@ export function extractArtilleryEvents($: cheerio.CheerioAPI, url: string): Even
             const fullImageUrl = imageUrl ? new URL(imageUrl, url).toString() : undefined;
 
             events.push({
-                id: eventId('Artillery Productions', eventDate, title, fullUrl),
+                id: eventId(VENUES.artillery, eventDate, title, fullUrl),
                 title,
                 date: eventDate,
                 description: price ? `Price: ${price}` : '',
                 url: fullUrl,
-                venue: 'Artillery Productions',
+                venue: VENUES.artillery,
                 imageUrl: fullImageUrl,
             });
         } catch (error) {

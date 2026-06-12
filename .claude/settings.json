@@ -1,5 +1,20 @@
 {
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in */frontend/src/*.ts|*/frontend/src/*.tsx) cd \"${CLAUDE_PROJECT_DIR:-.}/frontend\" && npx vitest related \"$f\" --run --passWithNoTests --reporter=dot 2>&1 | tail -12;; esac; }",
+            "timeout": 120,
+            "statusMessage": "Running related vitest tests…"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -32,7 +32,9 @@ const EventList: React.FC<EventListProps> = ({ events }) => {
             </span>
             <span className="event-list__title" role="heading" aria-level={3}>
               {event.title}
+{/*
               {i === 0 && <span className="event-list__mk" aria-hidden="true"> heißer tipp!</span>}
+*/}
             </span>
           </div>
         );

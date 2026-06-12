@@ -58,8 +58,14 @@ function applyTheme(theme: A11ySettings['theme']) {
 let dyslexiaFontLoaded = false;
 
 async function applyDyslexiaFont(enabled: boolean) {
-  if (enabled) {
-    if (!dyslexiaFontLoaded) {
+  if (!enabled) {
+    document.documentElement.removeAttribute('data-dyslexia');
+    return;
+  }
+  // attribute first: the system fallback shows immediately, OpenDyslexic swaps in when loaded
+  document.documentElement.setAttribute('data-dyslexia', '');
+  if (!dyslexiaFontLoaded) {
+    try {
       const font = new FontFace(
         'OpenDyslexic',
         'url(https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.woff)'
@@ -67,10 +73,10 @@ async function applyDyslexiaFont(enabled: boolean) {
       await font.load();
       document.fonts.add(font);
       dyslexiaFontLoaded = true;
+    } catch (error) {
+      document.documentElement.removeAttribute('data-dyslexia');
+      throw error;
     }
-    document.documentElement.style.setProperty('--a11y-font-family', "'OpenDyslexic', sans-serif");
-  } else {
-    document.documentElement.style.setProperty('--a11y-font-family', 'var(--font-body)');
   }
 }
 

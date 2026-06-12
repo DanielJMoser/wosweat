@@ -53,7 +53,6 @@
   --on-accent: #11111b;
 
   --a11y-font-scale: 1;
-  --a11y-font-family: var(--font-body);
 
   --ion-background-color: var(--ctp-base);
   --ion-text-color: var(--ctp-text);
@@ -90,11 +89,21 @@
   --ctp-crust: #dce0e8;
 }
 
+/* Scale on html so every rem-based size follows the a11y font-size setting */
+html {
+  font-size: calc(100% * var(--a11y-font-scale));
+}
+
 body {
-  font-family: var(--a11y-font-family);
-  font-size: calc(1rem * var(--a11y-font-scale));
+  font-family: var(--font-body);
   background: var(--ctp-crust);
   color: var(--ctp-text);
+}
+
+/* Dyslexia font replaces the content fonts wholesale (pixel/mono artifacts keep their cuts) */
+[data-dyslexia] {
+  --font-body: 'OpenDyslexic', sans-serif;
+  --font-display: 'OpenDyslexic', sans-serif;
 }
 
 /* keep scrollable content clear of the fixed telly band */

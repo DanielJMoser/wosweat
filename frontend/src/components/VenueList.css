@@ -16,7 +16,7 @@
 
 .venue-list__header h2 {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -25,7 +25,7 @@
 }
 
 .venue-list__header span {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--ctp-subtext0);
   transition: transform 0.3s ease;
 }

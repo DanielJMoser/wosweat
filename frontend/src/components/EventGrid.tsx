@@ -6,7 +6,6 @@ import './EventGrid.css';
 
 interface EventGridProps {
   events: EventData[];
-  loading: boolean;
 }
 
 function getFeaturedIndex(events: EventData[]): number {
@@ -14,9 +13,7 @@ function getFeaturedIndex(events: EventData[]): number {
   return withImage >= 0 ? withImage : 0;
 }
 
-const SKELETON_COUNT = 6;
-
-const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
+const EventGrid: React.FC<EventGridProps> = ({ events }) => {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,23 +34,6 @@ const EventGrid: React.FC<EventGridProps> = ({ events, loading }) => {
 
     return () => { gsap.killTweensOf(cards); };
   }, [events]);
-
-  if (loading) {
-    return (
-      <div className="event-grid" role="status" aria-label="Events werden geladen">
-        {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-          <div
-            key={i}
-            className={`event-grid__skeleton${i === 0 ? ' event-grid__skeleton--featured' : ''}`}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  if (events.length === 0) {
-    return <div className="event-grid__empty">Keine Events gefunden</div>;
-  }
 
   const featuredIndex = getFeaturedIndex(events);
 

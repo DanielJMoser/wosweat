@@ -7,6 +7,7 @@ import DateStrip from './components/DateStrip';
 import MonthGrid from './components/MonthGrid';
 import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
+import EventList from './components/EventList';
 import VenueList from './components/VenueList';
 import ViewControls, { View } from './components/ViewControls';
 import AccessibilityFab from './components/AccessibilityFab';
@@ -45,7 +46,7 @@ const App: React.FC = () => {
   };
   const [venueListOpen, setVenueListOpen] = useState(false);
   const venueListRef = useRef<HTMLDivElement>(null);
-  const { eventsByDate, allEvents, allEventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
+  const { eventsByDate, allEventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
   const [showError, setShowError] = useState(false);
   useEffect(() => { if (error) setShowError(true); }, [error]);
   const eventsForDate = eventsByDate.get(selectedDate) ?? [];
@@ -125,7 +126,22 @@ const App: React.FC = () => {
             view={view}
             onViewChange={changeView}
           />
-          <EventGrid events={eventsForDate} loading={loading} />
+          {loading ? (
+            <div className="event-grid" role="status" aria-label="Events werden geladen">
+              {Array.from({ length: 6 }, (_, i) => (
+                <div
+                  key={i}
+                  className={`event-grid__skeleton${i === 0 ? ' event-grid__skeleton--featured' : ''}`}
+                />
+              ))}
+            </div>
+          ) : eventsForDate.length === 0 ? (
+            <div className="event-grid__empty">Keine Events gefunden</div>
+          ) : view === 'list' ? (
+            <EventList events={eventsForDate} />
+          ) : (
+            <EventGrid events={eventsForDate} />
+          )}
         </main>
         <div ref={venueListRef}>
           <VenueList isOpen={venueListOpen} onToggle={() => setVenueListOpen(v => !v)} />

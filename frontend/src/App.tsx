@@ -11,6 +11,7 @@ import EventList from './components/EventList';
 import VenueList from './components/VenueList';
 import ViewControls, { View } from './components/ViewControls';
 import AccessibilityFab from './components/AccessibilityFab';
+import TellyBand from './components/TellyBand';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -148,6 +149,7 @@ const App: React.FC = () => {
         </div>
       </IonContent>
       <AccessibilityFab />
+      <TellyBand events={eventsForDate} />
     </IonApp>
   );
 };

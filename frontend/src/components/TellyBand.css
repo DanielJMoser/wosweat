@@ -1,0 +1,69 @@
+.telly {
+  position: fixed;
+  bottom: 0;
+  left: 8px;
+  right: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  height: var(--telly-height);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: content-box;
+  background: var(--ctp-teal);
+  color: var(--on-accent);
+}
+
+@media (max-width: 699px) {
+  .telly { left: 4px; }
+}
+
+.telly__track {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-pixel);
+  font-size: 0.6875rem;
+}
+
+.telly__copy {
+  animation: telly-scroll 30s linear infinite;
+  padding-right: 2rem;
+  flex-shrink: 0;
+}
+
+.telly__track--paused .telly__copy,
+.telly__track--static .telly__copy {
+  animation: none;
+}
+
+@keyframes telly-scroll {
+  to { transform: translateX(-100%); }
+}
+
+.telly__pause {
+  background: none;
+  border: none;
+  color: var(--on-accent);
+  font-size: 0.75rem;
+  min-width: 32px;
+  min-height: 24px;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.telly__pause:focus-visible {
+  outline: 2px solid var(--on-accent);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .telly__copy {
+    animation: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .telly__copy[aria-hidden] {
+    display: none;
+  }
+}

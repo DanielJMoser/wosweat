@@ -97,6 +97,11 @@ body {
   color: var(--ctp-text);
 }
 
+/* keep scrollable content clear of the fixed telly band */
+ion-content::part(scroll) {
+  padding-bottom: calc(var(--telly-height) + env(safe-area-inset-bottom));
+}
+
 :focus-visible {
   outline: 2px solid var(--ctp-teal);
   outline-offset: 2px;

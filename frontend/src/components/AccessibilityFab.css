@@ -1,6 +1,6 @@
 .a11y-fab {
   position: fixed;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  bottom: calc(16px + var(--telly-height) + env(safe-area-inset-bottom));
   right: 16px;
   z-index: 10000;
   width: 48px;

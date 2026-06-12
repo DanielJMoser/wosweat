@@ -8,6 +8,17 @@
 
 **Tech Stack:** Sanity v4 (studio only), Netlify Functions, vitest (new in backend), React 19 / Ionic, Cypress.
 
+## Execution status (updated 2026-06-12, mid-execution handoff)
+
+Executed via superpowers:subagent-driven-development — per task: implementer subagent → spec-compliance review → code-quality review → fixes re-reviewed before commit.
+
+- ✅ **Task 1** — `2f08c32` (both reviews passed; accepted flag: VENUE_NAMES ships one task before its Task-5 consumer, per plan)
+- ✅ **Task 2** — `161639c` + hardening `0c993fc` (quality review found a reproduced Critical: truthy non-string Sanity fields could throw in the matcher and 500 the API → `str()` type guard + typeof guards + 2 regression tests; backend suite is now **13** tests, not 11)
+- ✅ **Task 3** — `15d657a` + polish `ad8b172` (log `err.cause` for undici errors; pin timeout-signal + dataset-path in tests; backend `tsconfig` lib → `["ES2022", "DOM"]` for `Error.cause` — DOM was already implicit via the old default full-lib. Backend suite is now **19** tests, not 17)
+- ⏭️ **Next: Task 4** (then 5–9 via subagents; Task 10 is interactive user setup)
+- Commit-permission state: user granted blanket OK for the plan's listed commits AND review-loop fix commits (2026-06-12 session). **If resuming in a new session, re-confirm commit permission with the user.**
+- Read the spec's frontend section before Tasks 6–7: custom venues must display their hand-entered name (not "Unbekannt").
+
 **House rules for executors:**
 - NEVER run the backend (`netlify dev`, function invocation) — the user does this manually. Backend verification = `tsc --noEmit` + vitest only.
 - Each commit step requires the user's permission first. Ask at the commit step; do not batch silently.
@@ -28,7 +39,7 @@ Venue names currently live as string literals in `backend/functions/utils/site-s
 - Modify: `backend/functions/utils/extractors/artillery.ts:34`
 - Modify: `backend/functions/utils/extractors/kellertheater.ts:33`
 
-- [ ] **Step 1: Add venue constants to `shared/constants.ts`**
+- [x] **Step 1: Add venue constants to `shared/constants.ts`**
 
 Append after `TARGET_SITES`:
 
@@ -49,7 +60,7 @@ export const VENUE_NAMES = Object.values(VENUES);
 
 These strings must stay byte-identical to what the scrapers currently emit (they are copied from `site-selectors.ts` / the extractors — do not "fix" spelling).
 
-- [ ] **Step 2: Add `recommended` to `shared/types/events.ts`**
+- [x] **Step 2: Add `recommended` to `shared/types/events.ts`**
 
 ```ts
 export interface EventData {
@@ -66,7 +77,7 @@ export interface EventData {
 }
 ```
 
-- [ ] **Step 3: Use the constants in `site-selectors.ts`**
+- [x] **Step 3: Use the constants in `site-selectors.ts`**
 
 Add at the top:
 
@@ -76,16 +87,16 @@ import { VENUES } from '@wosweat/shared/constants';
 
 Replace the six `venue:` literals: `'Treibhaus Innsbruck'` → `VENUES.treibhaus`, `'PMK Innsbruck'` → `VENUES.pmk`, `'Music Hall Innsbruck'` → `VENUES.musicHall`, `'Die Bäckerei'` → `VENUES.baeckerei`, `'BRUX Freies Theater Innsbruck'` → `VENUES.brux`, `'LiveStage Tirol'` → `VENUES.livestage`. The `'Unknown Venue'` fallback stays a literal.
 
-- [ ] **Step 4: Use the constants in the two extractors**
+- [x] **Step 4: Use the constants in the two extractors**
 
 In `artillery.ts` add `import { VENUES } from '@wosweat/shared/constants';` and replace BOTH literals: line 29's `eventId('Artillery Productions', …)` first argument becomes `VENUES.artillery` and line 34 becomes `venue: VENUES.artillery,`. In `kellertheater.ts` likewise: line 28's `eventId('Innsbrucker Kellertheater', …)` first argument and line 33's `venue:` both become `VENUES.kellertheater`. (Identical strings, so generated IDs do not change.)
 
-- [ ] **Step 5: Type-check both consumers**
+- [x] **Step 5: Type-check both consumers**
 
 Run: `npx tsc --noEmit -p backend/tsconfig.json && npm run build`
 Expected: backend clean; root build (frontend `tsc && vite build`) succeeds.
 
-- [ ] **Step 6: Commit (ask permission first)**
+- [x] **Step 6: Commit (ask permission first)**
 
 ```bash
 git add shared/constants.ts shared/types/events.ts backend/functions/utils/site-selectors.ts backend/functions/utils/extractors/artillery.ts backend/functions/utils/extractors/kellertheater.ts
@@ -105,7 +116,7 @@ The backend workspace has no test runner. Add vitest, then build the pure merge 
 - Create: `backend/functions/utils/editorial.ts`
 - Test: `backend/functions/utils/editorial.test.ts`
 
-- [ ] **Step 1: Add vitest to the backend workspace**
+- [x] **Step 1: Add vitest to the backend workspace**
 
 In `backend/package.json` add:
 
@@ -145,7 +156,7 @@ export default defineConfig({
 Run: `npm install`
 Expected: lockfile updates, no peer-dep errors.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `backend/functions/utils/editorial.test.ts`:
 
@@ -271,12 +282,12 @@ describe('mergeEditorial', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npm run test.unit --workspace=@wosweat/backend`
 Expected: FAIL — cannot resolve `./editorial`.
 
-- [ ] **Step 4: Implement `backend/functions/utils/editorial.ts`**
+- [x] **Step 4: Implement `backend/functions/utils/editorial.ts`**
 
 ```ts
 import { EventData } from '@wosweat/shared/types/events';
@@ -353,12 +364,12 @@ export function mergeEditorial(scraped: EventData[], editorial: EditorialContent
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npm run test.unit --workspace=@wosweat/backend`
 Expected: PASS (11 tests). Also run `npx tsc --noEmit -p backend/tsconfig.json` — clean.
 
-- [ ] **Step 6: Commit (ask permission first)**
+- [x] **Step 6: Commit (ask permission first)**
 
 ```bash
 git add backend/package.json package.json package-lock.json backend/vitest.config.ts backend/functions/utils/editorial.ts backend/functions/utils/editorial.test.ts
@@ -373,7 +384,7 @@ git commit -m "feat(backend): editorial merge utilities with vitest setup"
 - Create: `backend/functions/utils/sanity.ts`
 - Test: `backend/functions/utils/sanity.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `backend/functions/utils/sanity.test.ts`:
 
@@ -444,12 +455,12 @@ describe('fetchEditorial', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm run test.unit --workspace=@wosweat/backend`
 Expected: FAIL — cannot resolve `./sanity`. (Task 2 tests stay green.)
 
-- [ ] **Step 3: Implement `backend/functions/utils/sanity.ts`**
+- [x] **Step 3: Implement `backend/functions/utils/sanity.ts`**
 
 ```ts
 import { EditorialContent } from './editorial';
@@ -495,12 +506,12 @@ export async function fetchEditorial(todayIso: string): Promise<EditorialContent
 
 Notes for the executor: the `apicdn` host is Sanity's cached public query endpoint — no token, drafts are never returned. `$today` must be JSON-encoded (`"2026-06-12"` with quotes) per the Sanity HTTP API parameter convention.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm run test.unit --workspace=@wosweat/backend`
 Expected: PASS (17 tests). `npx tsc --noEmit -p backend/tsconfig.json` clean.
 
-- [ ] **Step 5: Commit (ask permission first)**
+- [x] **Step 5: Commit (ask permission first)**
 
 ```bash
 git add backend/functions/utils/sanity.ts backend/functions/utils/sanity.test.ts

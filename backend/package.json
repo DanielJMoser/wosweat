@@ -3,6 +3,12 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "scripts": {
+    "test.unit": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.0"
+  },
   "dependencies": {
     "@netlify/blobs": "^10.7.4",
     "@netlify/functions": "^3.1.8",

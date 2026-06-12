@@ -1,0 +1,11 @@
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+    resolve: {
+        alias: {
+            '@wosweat/shared': fileURLToPath(new URL('../shared', import.meta.url)),
+        },
+    },
+    test: { environment: 'node' },
+});

@@ -17,7 +17,7 @@
     "prod:events": "curl -fsS https://wosweat.netlify.app/.netlify/functions/get-events | jq '{count, lastUpdated, sample: .events[0]}'",
     "build": "npm run build --workspace=frontend",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test.unit --workspace=@wosweat/frontend"
+    "test": "npm run test.unit --workspaces --if-present"
   },
   "devDependencies": {
     "eslint": "^9.20.1",

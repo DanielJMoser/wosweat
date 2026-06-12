@@ -1,4 +1,4 @@
-import { EditorialContent } from './editorial';
+import type { EditorialContent } from './editorial';
 
 const API_VERSION = 'v2025-02-19';
 const TIMEOUT_MS = 3000;
@@ -33,7 +33,7 @@ export async function fetchEditorial(todayIso: string): Promise<EditorialContent
         }
         return { custom: result.custom, recs: result.recs };
     } catch (err) {
-        console.error('[editorial] Sanity fetch failed:', err instanceof Error ? err.message : err);
+        console.error('[editorial] Sanity fetch failed:', err instanceof Error ? (err.cause ?? err.message) : err);
         return null;
     }
 }

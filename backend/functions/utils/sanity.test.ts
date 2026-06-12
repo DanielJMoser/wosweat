@@ -35,7 +35,9 @@ describe('fetchEditorial', () => {
         expect(content).toEqual(okBody.result);
         const url = String(spy.mock.calls[0][0]);
         expect(url).toContain('https://testproj.apicdn.sanity.io/');
+        expect(url).toContain('/data/query/production?');
         expect(url).toContain(encodeURIComponent('"2026-06-12"'));
+        expect(spy.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
     });
 
     test('returns null on non-200', async () => {

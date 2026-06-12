@@ -8,6 +8,7 @@ import MonthGrid from './components/MonthGrid';
 import DateHeading from './components/DateHeading';
 import EventGrid from './components/EventGrid';
 import EventList from './components/EventList';
+import QueryConsole from './components/QueryConsole';
 import VenueList from './components/VenueList';
 import ViewControls, { View } from './components/ViewControls';
 import AccessibilityFab from './components/AccessibilityFab';
@@ -47,7 +48,7 @@ const App: React.FC = () => {
   };
   const [venueListOpen, setVenueListOpen] = useState(false);
   const venueListRef = useRef<HTMLDivElement>(null);
-  const { eventsByDate, allEventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
+  const { eventsByDate, allEvents, allEventsByDate, loading, error, refresh, refreshing, selectedDate, setSelectedDate, lastUpdated } = useEvents({ venueFilter });
   const [showError, setShowError] = useState(false);
   useEffect(() => { if (error) setShowError(true); }, [error]);
   const eventsForDate = eventsByDate.get(selectedDate) ?? [];
@@ -143,6 +144,7 @@ const App: React.FC = () => {
           ) : (
             <EventGrid events={eventsForDate} />
           )}
+          <QueryConsole events={allEvents} todayIso={todayIso} />
         </main>
         <div ref={venueListRef}>
           <VenueList isOpen={venueListOpen} onToggle={() => setVenueListOpen(v => !v)} />

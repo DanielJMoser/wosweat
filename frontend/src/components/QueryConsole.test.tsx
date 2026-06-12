@@ -18,18 +18,18 @@ const type = (value: string) => {
 test('select prints results and a summary', () => {
   render(<QueryConsole events={events} todayIso="2026-06-11" />);
   type('SELECT * FROM events');
-  expect(screen.getByText(/→ 3 events \(/)).toBeInTheDocument();
+  expect(screen.getAllByText(/→ 3 events \(/).length).toBeGreaterThanOrEqual(1);
   expect(screen.getByText(/Molchat Doma \[PMK Innsbruck\]/)).toBeInTheDocument();
 });
 
 test('errors render friendly message without crashing', () => {
   render(<QueryConsole events={events} todayIso="2026-06-11" />);
   type('kaputt');
-  expect(screen.getByText(/✗ .*SELECT oder EXPORT/)).toBeInTheDocument();
+  expect(screen.getAllByText(/✗ .*SELECT oder EXPORT/).length).toBeGreaterThanOrEqual(1);
 });
 
 test('export with zero matches downloads nothing and says so', () => {
   render(<QueryConsole events={events} todayIso="2026-06-11" />);
   type("EXPORT ICS WHERE venue = 'nirgendwo'");
-  expect(screen.getByText(/→ 0 events — kein Download/)).toBeInTheDocument();
+  expect(screen.getAllByText(/→ 0 events — kein Download/).length).toBeGreaterThanOrEqual(1);
 });

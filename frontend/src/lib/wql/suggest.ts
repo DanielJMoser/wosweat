@@ -52,7 +52,7 @@ function expectations(tokens: Token[], venues: string[]): string[] {
   const tail = () => (isSelect ? ['ORDER BY', 'LIMIT', ';'] : [';']);
 
   // consume one value; returns expectations if input ends inside it, true on success, null on mismatch
-  const value = (field: string): string[] | true | null => {
+  const value = (): string[] | true | null => {
     if (at('string') || at('number')) { eat(); return true; }
     if (at('keyword', 'today')) {
       eat();
@@ -98,7 +98,7 @@ function expectations(tokens: Token[], venues: string[]): string[] {
       eat();
       for (;;) {
         if (end()) return valueSuggestions(field, venues);
-        const v = value(field);
+        const v = value();
         if (Array.isArray(v)) return v;
         if (v === null) return [];
         if (end()) return [',', ')'];
@@ -119,7 +119,7 @@ function expectations(tokens: Token[], venues: string[]): string[] {
       if (field === 'venue' && !['=', '!='].includes(tokens[i].value)) return [];
       eat();
       if (end()) return valueSuggestions(field, venues);
-      const v = value(field);
+      const v = value();
       if (Array.isArray(v)) return v;
       if (v === null) return [];
       return afterCondition();

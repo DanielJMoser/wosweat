@@ -20,17 +20,17 @@ beforeEach(() => {
 describe('hybrid ui — desktop', () => {
   beforeEach(() => cy.viewport(1280, 900));
 
-  it('toggles to list view and persists across reload', () => {
+  it('defaults to list view; cards choice persists across reload', () => {
     cy.visit('/');
+    cy.get('.event-list__row').should('have.length', 3);
+    cy.contains('button', 'KARTEN').click().should('have.attr', 'aria-pressed', 'true');
     cy.get('.event-card').should('have.length', 3);
-    cy.contains('button', 'LISTE').click().should('have.attr', 'aria-pressed', 'true');
-    cy.get('.event-list__row').should('have.length', 3);
     cy.reload();
-    cy.get('.event-list__row').should('have.length', 3);
+    cy.get('.event-card').should('have.length', 3);
   });
 
   it('list rows are keyboard-activatable', () => {
-    cy.visit('/', { onBeforeLoad(win) { win.localStorage.setItem('wosweat-view', 'list'); } });
+    cy.visit('/');
     cy.window().then(win => cy.stub(win, 'open').as('open'));
     cy.get('.event-list__row').first().focus().type('{enter}');
     cy.get('@open').should('have.been.calledWithMatch', 'https://example.com/');
@@ -40,23 +40,54 @@ describe('hybrid ui — desktop', () => {
     cy.visit('/');
     cy.contains('button', 'Alle').should('have.attr', 'aria-pressed', 'true');
     cy.contains('.view-controls__chip', 'PMK').click().should('have.attr', 'aria-pressed', 'true');
-    cy.get('.event-card').should('have.length', 1);
+    cy.get('.event-list__row').should('have.length', 1);
   });
 
-  it('console runs queries, reports errors, exports ics', () => {
+  it('console view runs queries, commands, and suggestions', () => {
     cy.visit('/');
+    cy.contains('button', 'KONSOLE').click().should('have.attr', 'aria-pressed', 'true');
+    cy.get('.console').should('be.visible');
     cy.get('[aria-label="WQL-Abfrage"]').type('SELECT * FROM events{enter}');
     cy.get('.console__ok').last().should('contain', 'events (');
-    cy.get('[aria-label="WQL-Abfrage"]').type('kaputt{enter}');
-    cy.get('.console__err').last().should('contain', '✗');
-    cy.get('[aria-label="WQL-Abfrage"]').type("EXPORT ICS WHERE venue = 'PMK'{enter}");
-    cy.get('.console__ok').last().should('contain', '.ics');
+    cy.get('[aria-label="WQL-Abfrage"]').type('help{enter}');
+    cy.get('.console__line').should('contain', 'EXPORT ICS');
+    cy.get('[aria-label="WQL-Abfrage"]').type('SELECT * FROM ');
+    cy.get('.console__suggest').contains('button', 'events').click();
+    cy.get('[aria-label="WQL-Abfrage"]').should('have.value', 'SELECT * FROM events ');
+    cy.get('[aria-label="WQL-Abfrage"]').clear().type('clear{enter}');
+    cy.get('.console__ok').should('not.exist');
+  });
+
+  it('month grid opens fully without clipping', () => {
+    cy.visit('/');
+    cy.get('[aria-label="Monatsansicht umschalten"]').click();
+    cy.get('.month-grid__cells').should($cells => {
+      const rect = $cells[0].getBoundingClientRect();
+      const panel = $cells[0].closest('.month-grid')!.getBoundingClientRect();
+      expect(rect.bottom, 'calendar fits inside the open panel').to.be.lte(panel.bottom + 1);
+    });
+    cy.get('.month-grid__cell').last().should('be.visible');
   });
 
   it('telly band shows venue:title pairs and pauses', () => {
     cy.visit('/');
     cy.get('.telly__copy').first().should('contain', 'PMK INNSBRUCK: MOLCHAT DOMA');
     cy.get('.telly__pause').click().should('have.attr', 'aria-pressed', 'true');
+  });
+});
+
+describe('hybrid ui — a11y drawer features', () => {
+  it('font scale actually scales rem text; dyslexia toggles the font tokens', () => {
+    cy.viewport(1280, 900);
+    cy.visit('/');
+    cy.get('html').should('have.css', 'font-size', '16px');
+    cy.get('[aria-label="Barrierefreiheits-Einstellungen"]').click();
+    cy.get('[aria-label="Schriftgröße groß"]').click();
+    cy.get('html').should('have.css', 'font-size', '20.8px');
+    cy.get('[aria-label="Schriftgröße klein"]').click();
+    cy.get('html').should('have.css', 'font-size', '16px');
+    cy.get('[aria-label="Legasthenie-Schrift"]').check({ force: true });
+    cy.get('html').should('have.attr', 'data-dyslexia');
   });
 });
 
@@ -72,8 +103,9 @@ describe('hybrid ui — light theme', () => {
     });
     cy.get('.date-pill:not(.date-pill--today) .date-pill-count').first()
       .should('have.css', 'color', 'rgb(76, 79, 105)');
-    cy.get('.console').should('have.css', 'background-color', 'rgb(17, 17, 27)');
     cy.get('.header-artifact').should('have.css', 'color', 'rgb(108, 111, 133)');
+    cy.contains('button', 'KONSOLE').click();
+    cy.get('.console').should('have.css', 'background-color', 'rgb(17, 17, 27)');
   });
 });
 
@@ -81,7 +113,7 @@ describe('hybrid ui — mobile', () => {
   beforeEach(() => cy.viewport(390, 844));
 
   it('no horizontal scroll, telly visible, list rows stack', () => {
-    cy.visit('/', { onBeforeLoad(win) { win.localStorage.setItem('wosweat-view', 'list'); } });
+    cy.visit('/');
     cy.get('.event-list__row').should('have.length', 3);
     cy.get('.telly').should('be.visible');
     cy.window().then(w =>

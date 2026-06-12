@@ -2,8 +2,24 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--ctp-mantle);
+  background: var(--ctp-crust);
   border-bottom: 1px solid var(--ctp-surface0);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-artifact {
+  font-family: var(--font-pixel);
+  font-size: 0.625rem;
+  color: var(--ctp-teal);
+}
+
+[data-theme="light"] .header-artifact {
+  color: var(--ctp-subtext0);
 }
 
 .header-inner {

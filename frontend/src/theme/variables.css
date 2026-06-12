@@ -204,6 +204,21 @@ body::before {
   padding: 0 0 0 12px;
 }
 
+.accent-rail {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: var(--ctp-teal);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@media (max-width: 699px) {
+  .accent-rail { width: 4px; }
+}
+
 .stale-hint {
   background: var(--ctp-surface0);
   border-left: 3px solid var(--ctp-peach);

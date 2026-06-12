@@ -50,6 +50,7 @@ const App: React.FC = () => {
 
   return (
     <IonApp>
+      <div className="accent-rail" aria-hidden="true" />
       <Header onVenueListClick={handleVenueListClick} />
       <DateStrip
         selectedDate={selectedDate}

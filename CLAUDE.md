@@ -29,9 +29,21 @@ wosweat/
 ```bash
 npm install              # Install all workspace dependencies
 npm run dev              # Start Netlify dev server (frontend + functions)
+npm run dev:scrape       # Populate the LOCAL Blobs sandbox (first run + after long gaps — it starts empty)
 npm run build            # Build frontend for production
 npm run lint             # Lint code
+npm test                 # Frontend unit tests (vitest)
+npx cypress run          # E2E (from frontend/; needs the dev server on port 5173)
 ```
+
+## Gotchas
+
+- `netlify dev` MUST run via `npm run dev` (passes `--filter @wosweat/backend`) — without the filter, the CLI's monorepo picker selects an arbitrary workspace and all functions 404.
+- A stale local blob (old `dev:scrape`) leaves only 0–2 future events per day, which surfaces latent sparse-data UI bugs — refresh data before suspecting regressions.
+- Verify layout changes in Firefox as well as Chromium — Cypress runs Chromium only, and grid/aspect-ratio interop differs (a Chromium-green change regressed in Firefox once already).
+- Image-less event cards size via an in-flow placeholder that mimics `<img>`; don't "fix" card sizing with aspect-ratio tricks on grid items.
+- `firefox --headless --screenshot` captures at the load event (skeletons, mid-animation); set `ui.prefersReducedMotion=1` in a throwaway profile to capture final states.
+- Editing `frontend/src/**/*.ts(x)` auto-runs related vitest tests via a PostToolUse hook in `.claude/settings.json` — test output after edits is expected, not noise.
 
 ## Architecture Overview
 
@@ -57,7 +69,9 @@ Scraper utilities in `backend/functions/utils/`:
 
 ### Frontend
 
-Ionic React app in `frontend/`: date strip + month grid navigation, event card grid, venue list, accessibility drawer (Catppuccin theme).
+Ionic React app in `frontend/`: date strip (pixel event-count badges) + month grid navigation, poster-scale date heading, card/list view toggle (persisted in localStorage), venue filter chips, telly-band marquee, venue list, accessibility drawer. Catppuccin theme plus non-flipping token sets (`--overlay-*`, `--on-accent`, `--console-*`) for surfaces that stay dark in both themes.
+
+`frontend/src/lib/wql/` is the client-only query language behind the console (lexer → parser → evaluator → ics). Security invariants — closed grammar, fixed field table, no `eval`/`new Function`, input caps, escaped LIKE patterns, RFC 5545 escaping — must never be weakened without re-running the adversarial tests in the module's `*.test.ts`.
 
 ### Data Flow
 

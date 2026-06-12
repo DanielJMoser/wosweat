@@ -13,6 +13,7 @@ import VenueList from './components/VenueList';
 import ViewControls, { View } from './components/ViewControls';
 import AccessibilityFab from './components/AccessibilityFab';
 import TellyBand from './components/TellyBand';
+import Impressum from './components/Impressum';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -94,7 +95,7 @@ const App: React.FC = () => {
 
         {refreshing && <div className="refresh-progress-bar" />}
 
-        <main style={{ maxWidth: 960, margin: '0 auto', padding: '0 1rem' }}>
+        <main className="app-main">
           {showError && error && (
             <div className="error-banner" role="alert">
               <div className="error-banner__content">
@@ -152,6 +153,7 @@ const App: React.FC = () => {
         </main>
         <div ref={venueListRef}>
           <VenueList isOpen={venueListOpen} onToggle={() => setVenueListOpen(v => !v)} />
+          <Impressum />
         </div>
       </IonContent>
       <AccessibilityFab />

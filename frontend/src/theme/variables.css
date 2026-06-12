@@ -218,6 +218,14 @@ body::before {
   padding: 0 0 0 12px;
 }
 
+/* push the venue/impressum footer block below the fold ("after the page break") */
+.app-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  min-height: calc(100dvh - 160px - var(--telly-height));
+}
+
 .accent-rail {
   position: fixed;
   left: 0;

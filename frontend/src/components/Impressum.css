@@ -1,0 +1,71 @@
+.impressum {
+  background: var(--ctp-crust);
+  border-top: 1px solid var(--ctp-surface0);
+}
+
+.impressum__header {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.impressum__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ctp-subtext1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.impressum__toggle:hover {
+  color: var(--ctp-text);
+}
+
+.impressum__toggle span {
+  font-size: 0.625rem;
+}
+
+.impressum__content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.4s cubic-bezier(0.2, 0, 0, 1),
+    opacity 0.3s ease;
+}
+
+.impressum__content--open {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.impressum__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.impressum__inner p {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ctp-subtext1);
+  margin: 0;
+}
+
+.impressum__inner b {
+  color: var(--ctp-text);
+  font-weight: 600;
+}

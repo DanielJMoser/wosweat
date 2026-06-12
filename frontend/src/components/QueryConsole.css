@@ -98,6 +98,31 @@
   outline-offset: 2px;
 }
 
+.console__suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.console__chip {
+  background: none;
+  border: 1px solid var(--console-border);
+  border-radius: 6px;
+  color: var(--console-dim);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  min-height: 24px;
+  cursor: pointer;
+}
+
+.console__chip:hover,
+.console__chip:focus-visible {
+  color: var(--console-prompt);
+  border-color: var(--console-prompt);
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

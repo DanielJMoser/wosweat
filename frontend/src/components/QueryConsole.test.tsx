@@ -33,3 +33,19 @@ test('export with zero matches downloads nothing and says so', () => {
   type("EXPORT ICS WHERE venue = 'nirgendwo'");
   expect(screen.getAllByText(/→ 0 events — kein Download/).length).toBeGreaterThanOrEqual(1);
 });
+
+test('help prints usage and clear empties the log', () => {
+  render(<QueryConsole events={events} todayIso="2026-06-11" />);
+  type('help');
+  expect(screen.getAllByText(/EXPORT ICS \[WHERE/).length).toBeGreaterThanOrEqual(1);
+  type('clear');
+  expect(screen.queryByText(/→ hilfe/)).not.toBeInTheDocument();
+});
+
+test('suggestion chips complete the query', () => {
+  render(<QueryConsole events={events} todayIso="2026-06-11" />);
+  const input = screen.getByLabelText('WQL-Abfrage') as HTMLInputElement;
+  fireEvent.change(input, { target: { value: 'SELECT * FROM ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'events' }));
+  expect(input.value).toBe('SELECT * FROM events ');
+});

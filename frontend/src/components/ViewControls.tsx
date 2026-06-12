@@ -1,7 +1,7 @@
 import { VENUE_CONFIG } from '../config/venues';
 import './ViewControls.css';
 
-export type View = 'cards' | 'list';
+export type View = 'cards' | 'list' | 'console';
 
 interface ViewControlsProps {
   venueFilter: string[];
@@ -58,6 +58,13 @@ const ViewControls: React.FC<ViewControlsProps> = ({
           className={view === 'list' ? 'view-controls__toggle-btn--on' : ''}
         >
           LISTE
+        </button>
+        <button
+          onClick={() => onViewChange('console')}
+          aria-pressed={view === 'console'}
+          className={view === 'console' ? 'view-controls__toggle-btn--on' : ''}
+        >
+          KONSOLE
         </button>
       </div>
     </div>

@@ -43,3 +43,9 @@ test('view toggle reports the chosen view', () => {
   fireEvent.click(liste);
   expect(onViewChange).toHaveBeenCalledWith('list');
 });
+
+test('console is a third view option', () => {
+  const { onViewChange } = setup();
+  fireEvent.click(screen.getByRole('button', { name: 'KONSOLE' }));
+  expect(onViewChange).toHaveBeenCalledWith('console');
+});

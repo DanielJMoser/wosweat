@@ -4,7 +4,20 @@ import { WqlError } from '../lib/wql/lexer';
 import { parse } from '../lib/wql/parser';
 import { runQuery } from '../lib/wql/evaluate';
 import { buildIcs, downloadIcs } from '../lib/wql/ics';
+import { suggest, Suggestion } from '../lib/wql/suggest';
+import { VENUE_CONFIG } from '../config/venues';
 import './QueryConsole.css';
+
+const VENUE_KEYS = Object.keys(VENUE_CONFIG);
+
+const HELP_LINES = [
+  "SELECT * FROM events [WHERE …] [ORDER BY feld [ASC|DESC]] [LIMIT n]",
+  'EXPORT ICS [WHERE …]   → lädt die treffer als .ics-kalender herunter',
+  'clear                  → konsole leeren',
+  "felder: venue, date, title, time · operatoren: = != < <= > >= IN (…) LIKE ('%…%')",
+  "datum: today(), today() + 7 · strings in 'einfachen quotes'",
+  "beispiel: SELECT * FROM events WHERE venue = 'PMK' AND date <= today() + 7;",
+];
 
 interface QueryConsoleProps {
   events: EventData[];
@@ -31,6 +44,17 @@ const QueryConsole: React.FC<QueryConsoleProps> = ({ events, todayIso }) => {
   }, [entries]);
 
   const run = (raw: string) => {
+    const command = raw.toLowerCase().replace(/;$/, '').trim();
+    if (command === 'clear') {
+      setEntries([]);
+      return;
+    }
+    if (command === 'help') {
+      setEntries(prev => [...prev.slice(-MAX_HISTORY + 1), {
+        query: raw, lines: HELP_LINES, summary: '→ hilfe', isError: false,
+      }]);
+      return;
+    }
     const started = performance.now();
     try {
       const result = runQuery(parse(raw), events, todayIso);
@@ -87,6 +111,15 @@ const QueryConsole: React.FC<QueryConsoleProps> = ({ events, todayIso }) => {
   };
 
   const latest = entries[entries.length - 1];
+  const suggestions = suggest(input, VENUE_KEYS);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const applySuggestion = (s: Suggestion) => {
+    const base = s.replaceLast ? input.replace(/[a-zA-Z_äöüÄÖÜß]+$/, '') : input;
+    const needsSpace = base.length > 0 && !base.endsWith(' ');
+    setInput(`${base}${needsSpace ? ' ' : ''}${s.text}${s.text === ';' ? '' : ' '}`);
+    inputRef.current?.focus();
+  };
 
   return (
     <section className="console" aria-label="Query-Konsole">
@@ -118,6 +151,7 @@ const QueryConsole: React.FC<QueryConsoleProps> = ({ events, todayIso }) => {
         <form className="console__form" onSubmit={handleSubmit}>
           <span className="console__prompt" aria-hidden="true">wql&gt;</span>
           <input
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -125,9 +159,23 @@ const QueryConsole: React.FC<QueryConsoleProps> = ({ events, todayIso }) => {
             autoComplete="off"
             spellCheck={false}
             maxLength={300}
-            placeholder="SELECT * FROM events WHERE venue = 'PMK';"
+            placeholder="SELECT * FROM events WHERE venue = 'PMK';  (help für hilfe)"
           />
         </form>
+        {suggestions.length > 0 && (
+          <div className="console__suggest" role="group" aria-label="Vorschläge">
+            {suggestions.map(s => (
+              <button
+                key={s.text}
+                type="button"
+                className="console__chip"
+                onClick={() => applySuggestion(s)}
+              >
+                {s.text}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

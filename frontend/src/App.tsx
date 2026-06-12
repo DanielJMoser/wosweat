@@ -40,7 +40,10 @@ const App: React.FC = () => {
   const [monthGridOpen, setMonthGridOpen] = useState(false);
   const [venueFilter, setVenueFilter] = useState<string[]>([]);
   const [view, setView] = useState<View>(() => {
-    try { return localStorage.getItem('wosweat-view') === 'list' ? 'list' : 'cards'; } catch { return 'cards'; }
+    try {
+      const stored = localStorage.getItem('wosweat-view');
+      return stored === 'cards' || stored === 'console' ? stored : 'list';
+    } catch { return 'list'; }
   });
   const changeView = (v: View) => {
     setView(v);
@@ -128,7 +131,9 @@ const App: React.FC = () => {
             view={view}
             onViewChange={changeView}
           />
-          {loading ? (
+          {view === 'console' ? (
+            <QueryConsole events={allEvents} todayIso={todayIso} />
+          ) : loading ? (
             <div className="event-grid" role="status" aria-label="Events werden geladen">
               {Array.from({ length: 6 }, (_, i) => (
                 <div
@@ -144,7 +149,6 @@ const App: React.FC = () => {
           ) : (
             <EventGrid events={eventsForDate} />
           )}
-          <QueryConsole events={allEvents} todayIso={todayIso} />
         </main>
         <div ref={venueListRef}>
           <VenueList isOpen={venueListOpen} onToggle={() => setVenueListOpen(v => !v)} />

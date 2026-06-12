@@ -107,7 +107,12 @@ const App: React.FC = () => {
               }).format(new Date(lastUpdated))}
             </div>
           )}
-          <DateHeading date={selectedDate} />
+          <DateHeading
+            date={selectedDate}
+            eventCount={eventsForDate.length}
+            venueCount={new Set(eventsForDate.map(e => e.venue).filter(Boolean)).size}
+            isToday={selectedDate === todayIso}
+          />
           <EventGrid events={eventsForDate} loading={loading} />
         </main>
         <div ref={venueListRef}>

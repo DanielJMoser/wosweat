@@ -5,20 +5,31 @@ const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'A
 
 interface DateHeadingProps {
   date: string;
+  eventCount: number;
+  venueCount: number;
+  isToday: boolean;
 }
 
-const DateHeading: React.FC<DateHeadingProps> = ({ date }) => {
+const DateHeading: React.FC<DateHeadingProps> = ({ date, eventCount, venueCount, isToday }) => {
   const d = new Date(date + 'T00:00:00');
   const weekday = WEEKDAYS[d.getDay()];
   const day = d.getDate();
   const month = MONTHS[d.getMonth()];
 
   return (
-    <div className="date-heading" role="heading" aria-level={2}>
-      <div className="date-heading-weekday">{weekday}</div>
-      <div className="date-heading-date">
-        {day}. <span className="date-heading-month">{month}</span>
+    <div className="date-heading">
+      {isToday && <span className="date-heading-stamp" aria-hidden="true">heute!</span>}
+      <div role="heading" aria-level={2}>
+        <span className="date-heading-weekday">{weekday}</span>
+        <span className="date-heading-date">
+          {day}. <span className="date-heading-month">{month}</span>
+        </span>
       </div>
+      {eventCount > 0 && (
+        <p className="date-heading-meta" aria-hidden="true">
+          {eventCount} EVENTS <b>///</b> {venueCount} VENUES
+        </p>
+      )}
     </div>
   );
 };

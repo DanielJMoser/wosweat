@@ -1,25 +1,61 @@
 .date-heading {
-  padding: 16px 0 8px;
+  position: relative;
+  padding: 20px 0 10px;
+  margin: 0;
 }
 
 .date-heading-weekday {
+  display: block;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.26em;
   color: var(--ctp-teal);
 }
 
 .date-heading-date {
+  display: block;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(2.4rem, 6vw, 4rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  font-size: clamp(2.75rem, 11vw, 8rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
   color: var(--ctp-text);
 }
 
 .date-heading-month {
   color: var(--ctp-teal);
+}
+
+.date-heading-meta {
+  margin: 14px 0 0;
+  font-family: var(--font-pixel);
+  font-size: 0.625rem;
+  color: var(--ctp-subtext0);
+}
+
+.date-heading-meta b {
+  color: var(--ctp-teal);
+  font-weight: 400;
+}
+
+.date-heading-stamp {
+  position: absolute;
+  right: 2%;
+  top: 2px;
+  font-family: var(--font-marker);
+  font-size: 1.5rem;
+  background: var(--ctp-teal);
+  color: var(--on-accent);
+  padding: 4px 16px 6px;
+  transform: rotate(-6deg);
+  box-shadow: 4px 4px 0 var(--ctp-crust);
+  animation: stamp-pop 0.4s 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  z-index: 1;
+}
+
+@keyframes stamp-pop {
+  from { opacity: 0; transform: rotate(-6deg) scale(1.6); }
+  to { opacity: 1; transform: rotate(-6deg) scale(1); }
 }

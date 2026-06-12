@@ -69,7 +69,7 @@ Scraper utilities in `backend/functions/utils/`:
 
 ### Frontend
 
-Ionic React app in `frontend/`: date strip (pixel event-count badges) + month grid navigation, poster-scale date heading, card/list view toggle (persisted in localStorage), venue filter chips, telly-band marquee, venue list, accessibility drawer. Catppuccin theme plus non-flipping token sets (`--overlay-*`, `--on-accent`, `--console-*`) for surfaces that stay dark in both themes.
+Ionic React app in `frontend/`: date strip (pixel event-count badges) + month grid navigation, poster-scale date heading, three-view toggle KARTEN/LISTE/KONSOLE (list is default, persisted in localStorage), venue filter chips, telly-band marquee, venue list, accessibility drawer. Catppuccin theme plus non-flipping token sets (`--overlay-*`, `--on-accent`, `--console-*`) for surfaces that stay dark in both themes.
 
 `frontend/src/lib/wql/` is the client-only query language behind the console (lexer → parser → evaluator → ics). Security invariants — closed grammar, fixed field table, no `eval`/`new Function`, input caps, escaped LIKE patterns, RFC 5545 escaping — must never be weakened without re-running the adversarial tests in the module's `*.test.ts`.
 
